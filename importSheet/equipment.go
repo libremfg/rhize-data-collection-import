@@ -16,7 +16,8 @@ func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImport
 	properties := make([]*domain.EquipmentClassPropertyRef, 0)
 
 	bound := domain.PropertyBindingTypeBound
-	instanceType := domain.Isa95PropertyTypeInstanceType
+	static := domain.PropertyBindingTypeStatic
+	classType := domain.Isa95PropertyTypeClassType
 
 	equipmentClassName := equipmentImportData.EquipmentClassName
 
@@ -26,6 +27,9 @@ func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImport
 		}
 
 		propertyPath := property.ID
+		if strings.HasPrefix(propertyPath, equipmentClassName) {
+			propertyPath = propertyPath[len(equipmentClassName)+1:]
+		}
 
 		// Filter out initial starting dot if it exists
 		if propertyPath[0] == '.' {
@@ -50,12 +54,17 @@ func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImport
 		// Get UoM
 		uom := property.UnitOfMeasure.ID
 
+		bindingType := &bound
+		if property.UnitOfMeasure.DataType == "" {
+			bindingType = &static
+		}
+
 		// Create Property Ref
 		property := domain.EquipmentClassPropertyRef{
 			ID:           types.StringPtr(propertyId),
 			Label:        types.StringPtr(propertyName),
-			BindingType:  &bound,
-			PropertyType: &instanceType,
+			BindingType:  bindingType,
+			PropertyType: &classType,
 		}
 		if uom != "" {
 			property.ValueUnitOfMeasure = &domain.UnitOfMeasureRef{
@@ -89,7 +98,7 @@ search:
 			ID:           parentPropertyId,
 			Label:        types.StringPtr(parentPropertyList[len(parentPropertyList)-1]),
 			BindingType:  &bound,
-			PropertyType: &instanceType,
+			PropertyType: &classType,
 			EquipmentClassVersion: &domain.EquipmentClassVersionRef{
 				ID:      &equipmentClassName,
 				Version: types.StringPtr("1"),

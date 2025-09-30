@@ -56,5 +56,7 @@ func main() {
 		EquipmentClassDescription: bDescription,
 	}
 
+	log.Println("Importing sheet " + *bSheet + " from file " + *bFile)
+
 	importSheet.Import(config)
 }
