@@ -1,0 +1,102 @@
+name: Go Build and Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+    branches:
+      - actions-test
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            goos: linux
+            goarch: amd64
+            suffix: linux-amd64
+          - os: ubuntu-latest
+            goos: linux
+            goarch: arm64
+            suffix: linux-arm64
+          - os: windows-latest
+            goos: windows
+            goarch: amd64
+            suffix: windows-amd64.exe
+          - os: windows-latest
+            goos: windows
+            goarch: arm64
+            suffix: windows-arm64.exe
+          - os: macos-latest
+            goos: darwin
+            goarch: amd64
+            suffix: darwin-amd64
+          - os: macos-latest
+            goos: darwin
+            goarch: arm64
+            suffix: darwin-arm64
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up Go
+      uses: actions/setup-go@v5
+      with:
+        go-version: '1.23.x'
+        check-latest: true
+
+    - name: Build
+      env:
+        GOOS: ${{ matrix.goos }}
+        GOARCH: ${{ matrix.goarch }}
+        CGO_ENABLED: 0
+      run: |
+        go build -ldflags="-s -w" -o rhize-import-${{ matrix.suffix }} main.go
+
+    - name: Upload Artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: rhize-import-${{ matrix.suffix }}
+        path: rhize-import-${{ matrix.suffix }}
+        retention-days: 30
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Prepare release assets
+      run: |
+        # Create release assets directory
+        mkdir -p release-assets
+        
+        # Move all artifacts to release assets with proper names
+        find artifacts -name "rhize-import-*" -type f -exec cp {} release-assets/ \;
+        
+        # List files for verification
+        ls -la release-assets/
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v2
+      with:
+        files: release-assets/*
+        generate_release_notes: true
+        draft: false
+        prerelease: ${{ contains(github.ref, '-') }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
