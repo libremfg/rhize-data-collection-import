@@ -79,6 +79,7 @@ type VersionState string
 
 const (
 	VersionStateActive VersionState = "ACTIVE"
+	VersionStateDraft  VersionState = "DRAFT"
 )
 
 type StringExactFilterStringFullTextFilterStringRegExpFilter struct {
@@ -127,7 +128,9 @@ type AddEquipmentClassInput struct {
 }
 
 type EquipmentClassVersion struct {
-	Iid string `json:"iid,omitempty"`
+	Iid           string       `json:"iid,omitempty"`
+	Version       string       `json:"version,omitempty"`
+	VersionStatus VersionState `json:"versionStatus,omitempty"`
 }
 
 type UpdateEquipmentClassInput struct {

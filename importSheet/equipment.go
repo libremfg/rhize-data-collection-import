@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strconv"
 	"strings"
 
 	"rhize-data-collection-import/domain"
@@ -91,32 +92,66 @@ search:
 				continue search
 			}
 		}
-		// If not present, add details to parent
-		parentPropertyId := property.Parent.ID
-		parentPropertyList := strings.Split(*parentPropertyId, ".")
-		property.Parent = &domain.EquipmentClassPropertyRef{
-			ID:           parentPropertyId,
-			Label:        types.StringPtr(parentPropertyList[len(parentPropertyList)-1]),
-			BindingType:  &bound,
-			PropertyType: &classType,
-			EquipmentClassVersion: &domain.EquipmentClassVersionRef{
-				ID:      &equipmentClassName,
-				Version: types.StringPtr("1"),
-			},
-		}
+		// If not present, then crash
+		log.Fatalf("Could not parse equipment properties, parent property \"%s\" is missing.", *property.Parent.ID)
 	}
 
 	// Add Equipment Class
 	log.Println("\tAdding Equipment Class")
 
-	uiSortIndex := 1
-	processCell := domain.EquipmentElementLevelProcessCell
+	// Check if Equipment Class already exists
+	equipmentClassId := equipmentClassName
+	var equipmentClassVersion string
 
-	extruder := types.GetEquipmentClassPayload(equipmentClassName, types.StringPtr(equipmentImportData.EquipmentClassDescription), &processCell, uiSortIndex)
+	equipmentClass := types.GetEquipmentClassAllVersions(ctx, client, &domain.AddEquipmentClassInput{
+		ID: equipmentClassId,
+	})
 
-	err := types.CreateEquipmentClass(ctx, client, extruder)
-	if err != nil {
-		panic(err)
+	// If exists then
+	if equipmentClass != nil {
+		log.Println("\t\tEquipment Class already exists, updating instead")
+		// - Get latest version, if a draft version, then update that version
+		// - Else if not a draft version, then make a new draft version and update that version
+		latestVersion := equipmentClass.Versions[len(equipmentClass.Versions)-1]
+		latestVersionNum, err := strconv.Atoi(latestVersion.Version)
+		if err != nil {
+			panic(err)
+		}
+
+		switch latestVersion.VersionStatus {
+		case domain.VersionStateDraft:
+			// Do nothing
+			equipmentClassVersion = strconv.Itoa(latestVersionNum)
+		case domain.VersionStateActive:
+			fallthrough
+		default:
+			// Create a draft version
+			_, err = types.SaveEquipmentClassVersionAs(
+				ctx,
+				client,
+				equipmentClassId,
+				strconv.Itoa(latestVersionNum),
+				strconv.Itoa(latestVersionNum+1),
+			)
+			equipmentClassVersion = strconv.Itoa(latestVersionNum + 1)
+		}
+		if err != nil {
+			panic(err)
+		}
+	} else {
+		// Else if doesn't exist, then add a new Equipment Class
+		uiSortIndex := 1
+		processCell := domain.EquipmentElementLevelProcessCell
+
+		extruder := types.GetEquipmentClassPayload(equipmentClassName, types.StringPtr(equipmentImportData.EquipmentClassDescription), &processCell, uiSortIndex)
+
+		var err error
+		_, err = types.CreateEquipmentClass(ctx, client, extruder)
+		if err != nil {
+			panic(err)
+		}
+
+		equipmentClassVersion = "1"
 	}
 
 	// Add Equipment Properties
@@ -131,12 +166,12 @@ search:
 			PropertyType: *property.PropertyType,
 			EquipmentClassVersion: &domain.EquipmentClassVersionRef{
 				ID:      &equipmentClassName,
-				Version: types.StringPtr("1"),
+				Version: types.StringPtr(equipmentClassVersion),
 			},
 			ValueUnitOfMeasure: property.ValueUnitOfMeasure,
 		})
 		if err != nil {
-			fmt.Printf("Failed to input property with ID \"%s\": %s\n", *property.ID, err)
+			log.Printf("\t\tFailed to input property with ID \"%s\": %s\n", *property.ID, err)
 		}
 	}
 }

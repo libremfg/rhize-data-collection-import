@@ -20,12 +20,13 @@ var (
 
 	/* Auth */
 	bAuth         = flag.Bool("auth", true, "Authenticate Client")
-	sAuthUrl      = flag.String("auth-host", "http://localhost:8090", "URL for Auth")
+	sAuthUrl      = flag.String("authUrl", "http://localhost:8090", "URL for Keycloak Auth")
+	sRealm        = flag.String("realm", "libre", "Keycloak Realm")
 	sClientID     = flag.String("clientId", "libreBaas", "Client ID")
 	sClientSecret = flag.String("clientSecret", "7a7m7IBF0THzyx7K7H4SsgwA5If1xYMO", "Client Secret")
 	sUser         = flag.String("user", "admin", "Authentication Username")
 	sPassword     = flag.String("password", "admin", "Authentication Password")
-	sURL          = flag.String("url", "http://localhost:8080/graphql", "URL for Libre")
+	sURL          = flag.String("apiUrl", "http://localhost:8080/graphql", "URL for Rhize API")
 )
 
 func init() {
@@ -43,7 +44,7 @@ func main() {
 	}
 
 	if *bAuth {
-		client = auth.Authenticate(ctx, *sAuthUrl, *sUser, *sPassword, *sClientID, *sClientSecret)
+		client = auth.Authenticate(ctx, *sAuthUrl, *sUser, *sPassword, *sRealm, *sClientID, *sClientSecret)
 	}
 
 	// Setup Configuration
