@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const versionString = "rhize-data-collection-import v1.2.0"
+const versionString = "rhize-data-collection-import v1.2.1"
 
 var (
 	bFile        = flag.String("file", "", "Excel/CSV file to import data from")
@@ -23,7 +23,7 @@ var (
 	sAuthUrl      = flag.String("authUrl", "http://localhost:8090", "URL for Keycloak Auth")
 	sRealm        = flag.String("realm", "libre", "Keycloak Realm")
 	sClientID     = flag.String("clientId", "libreBaas", "Client ID")
-	sClientSecret = flag.String("clientSecret", "7a7m7IBF0THzyx7K7H4SsgwA5If1xYMO", "Client Secret")
+	sClientSecret = flag.String("clientSecret", "", "Client Secret")
 	sUser         = flag.String("user", "admin", "Authentication Username")
 	sPassword     = flag.String("password", "admin", "Authentication Password")
 	sURL          = flag.String("apiUrl", "http://localhost:8080/graphql", "URL for Rhize API")
