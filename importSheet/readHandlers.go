@@ -82,6 +82,9 @@ func ReadXLSX(filePath string, sheet string) (*EquipmentImportData, error) {
 		if row[1] == "" {
 			continue
 		}
+		if len(row) < 13 {
+			log.Fatalf("\tERROR: The row %d has insufficient columns, requires 12 has %d. Unable to parse property from spreadsheet. Inspect the spreadsheet for errors and try again.", i, len(row))
+		}
 		equipmentClassPropertyData = append(equipmentClassPropertyData, EquipmentClassPropertyData{
 			ID: row[1],
 			UnitOfMeasure: struct {

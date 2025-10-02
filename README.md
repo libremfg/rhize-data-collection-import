@@ -101,7 +101,8 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
-
+- v1.2.1 T.H.
+  - Change error messages to pin-point where to check the import spreadsheet
 - v1.2.0 T.H.
   - Change behaviour to create new draft version (or update current draft), Otherwise create a completely new Equipment Class
 - v1.1.0 T.H.

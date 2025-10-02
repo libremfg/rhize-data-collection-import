@@ -93,7 +93,7 @@ search:
 			}
 		}
 		// If not present, then crash
-		log.Fatalf("Could not parse equipment properties, parent property \"%s\" is missing.", *property.Parent.ID)
+		log.Fatalf("Could not parse equipment properties, parent property \"%s\" is missing. Check that it is defined in the spreadsheet and in Use (X).", *property.Parent.ID)
 	}
 
 	// Add Equipment Class
