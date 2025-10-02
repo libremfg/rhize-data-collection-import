@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const versionString = "rhize-data-collection-import v1.0.0"
+const versionString = "rhize-data-collection-import v1.2.0"
 
 var (
 	bFile        = flag.String("file", "", "Excel/CSV file to import data from")
@@ -43,8 +43,14 @@ func main() {
 		Timeout: time.Second * 5,
 	}
 
+	var err error
+
 	if *bAuth {
-		client = auth.Authenticate(ctx, *sAuthUrl, *sUser, *sPassword, *sRealm, *sClientID, *sClientSecret)
+		client, err = auth.Authenticate(ctx, *sAuthUrl, *sUser, *sPassword, *sRealm, *sClientID, *sClientSecret)
+		if err != nil {
+			log.Fatalf("Authentication failed: %v", err)
+			return
+		}
 	}
 
 	// Setup Configuration

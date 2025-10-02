@@ -187,7 +187,54 @@ func GetEquipmentClass(ctx context.Context, client *graphql.Client, equipmentCla
 
 	return response.GetEquipmentClass
 }
+func GetEquipmentClassVersion(ctx context.Context, client *graphql.Client, equipmentClassId string, version string) (*domain.EquipmentClassVersion, error) {
 
+	var response struct {
+		GetEquipmentClassVersion *domain.EquipmentClassVersion `json:"getEquipmentClassVersion"`
+	}
+
+	var q struct {
+		GetEquipmentClassVersion struct {
+			IID        string `graphql:"iid"`
+			ID         string `graphql:"id"`
+			Version    string `graphql:"version"`
+			Properties []struct {
+				ID                 string `graphql:"id"`
+				IID                string `graphql:"iid"`
+				Label              string `graphql:"label"`
+				Description        string `graphql:"description"`
+				Value              string `graphql:"value"`
+				BindingType        string `graphql:"bindingType"`
+				PropertyType       string `graphql:"propertyType"`
+				ValueUnitOfMeasure struct {
+					ID       string `graphql:"id"`
+					DataType string `graphql:"dataType"`
+				} `graphql:"valueUnitOfMeasure"`
+				Parent struct {
+					Iid string `graphql:"iid"`
+					ID  string `graphql:"id"`
+				} `graphql:"parent"`
+			} `graphql:"properties"`
+		} `graphql:"getEquipmentClassVersion(id:$id, version:$version)"`
+	}
+
+	variables := map[string]interface{}{
+		"id":      graphql.String(equipmentClassId),
+		"version": graphql.String(version),
+	}
+
+	jsonResult, err := client.QueryRaw(context.Background(), &q, variables)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal(jsonResult, &response)
+	if err != nil {
+		return nil, err
+	}
+
+	return response.GetEquipmentClassVersion, nil
+}
 func GetEquipmentClassAllVersions(ctx context.Context, client *graphql.Client, equipmentClass *domain.AddEquipmentClassInput) *domain.EquipmentClass {
 
 	var response struct {
@@ -206,6 +253,23 @@ func GetEquipmentClassAllVersions(ctx context.Context, client *graphql.Client, e
 				ID            string `graphql:"id"`
 				Version       string `graphql:"version"`
 				VersionStatus string `graphql:"versionStatus"`
+				Properties    []struct {
+					ID                 string `graphql:"id"`
+					IID                string `graphql:"iid"`
+					Label              string `graphql:"label"`
+					Description        string `graphql:"description"`
+					Value              string `graphql:"value"`
+					BindingType        string `graphql:"bindingType"`
+					PropertyType       string `graphql:"propertyType"`
+					ValueUnitOfMeasure struct {
+						ID       string `graphql:"id"`
+						DataType string `graphql:"dataType"`
+					} `graphql:"valueUnitOfMeasure"`
+					Parent struct {
+						Iid string `graphql:"iid"`
+						ID  string `graphql:"id"`
+					} `graphql:"parent"`
+				} `graphql:"properties"`
 			} `graphql:"versions(order:{asc:version})"`
 		} `graphql:"getEquipmentClass(id:$id)"`
 	}
@@ -257,6 +321,42 @@ func CreateEquipmentClassProperty(ctx context.Context, client *graphql.Client, e
 	err = json.Unmarshal(jsonResult, &response)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func DeleteEquipmentClassProperty(ctx context.Context, client *graphql.Client, equipmentClassPropertyIid string) error {
+	var m struct {
+		DeleteEquipmentClassProperty struct {
+			NumUids int `graphql:"numUids"`
+		} `graphql:"deleteEquipmentClassProperty(filter: {iid: $iid})"`
+	}
+
+	variables := map[string]interface{}{
+		"iid": []graphql.ID{
+			graphql.ID(equipmentClassPropertyIid),
+		},
+	}
+
+	bytes, err := client.MutateRaw(ctx, m, variables)
+	if err != nil {
+		return err
+	}
+
+	var response struct {
+		DeleteEquipmentClassProperty struct {
+			NumUids int `json:"numUids"`
+		} `json:"deleteEquipmentClassProperty"`
+	}
+
+	err = json.Unmarshal(bytes, &response)
+	if err != nil {
+		return err
+	}
+
+	if response.DeleteEquipmentClassProperty.NumUids != 1 {
+		return fmt.Errorf("expected to delete 1 equipment class property, deleted %d", response.DeleteEquipmentClassProperty.NumUids)
 	}
 
 	return nil

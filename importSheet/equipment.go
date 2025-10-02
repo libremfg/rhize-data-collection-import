@@ -88,7 +88,7 @@ search:
 		}
 		for _, p := range properties {
 			// Check if ID is present, if so just continue
-			if property.Parent.ID == p.ID {
+			if *property.Parent.ID == *p.ID {
 				continue search
 			}
 		}
@@ -112,31 +112,107 @@ search:
 		log.Println("\t\tEquipment Class already exists, updating instead")
 		// - Get latest version, if a draft version, then update that version
 		// - Else if not a draft version, then make a new draft version and update that version
-		latestVersion := equipmentClass.Versions[len(equipmentClass.Versions)-1]
-		latestVersionNum, err := strconv.Atoi(latestVersion.Version)
-		if err != nil {
-			panic(err)
-		}
+		latestVersion := pickLatestVersion(equipmentClass.Versions, false)
 
-		switch latestVersion.VersionStatus {
-		case domain.VersionStateDraft:
-			// Do nothing
-			equipmentClassVersion = strconv.Itoa(latestVersionNum)
-		case domain.VersionStateActive:
-			fallthrough
-		default:
+		if latestVersion.VersionStatus == domain.VersionStateDraft {
+
+			prefix := len(equipmentClassName) + 3 // +3 for ".1."
+			for i := range properties {
+				id := *properties[i].ID
+				id = equipmentClassName + "." + latestVersion.Version + "." + id[prefix:]
+				properties[i].ID = &id
+
+				if properties[i].Parent != nil {
+					parentId := *properties[i].Parent.ID
+					parentId = equipmentClassName + "." + latestVersion.Version + "." + parentId[prefix:]
+					properties[i].Parent.ID = &parentId
+				}
+			}
+
+			log.Printf("\t\tLatest version is a draft version (%s), updating that version\n", latestVersion.Version)
+			for _, property := range latestVersion.Properties {
+				log.Printf("\t\tRemoving property \"%s\"\n", property.ID)
+				err := types.DeleteEquipmentClassProperty(ctx, client, property.Iid)
+				if err != nil {
+					log.Printf("\t\t\tFailed to remove property with ID \"%s\": %s\n", property.ID, err)
+				}
+			}
+			for _, property := range properties {
+				log.Printf("\t\tAdding property \"%s\"\n", *property.ID)
+				err := types.CreateEquipmentClassProperty(ctx, client, &domain.AddEquipmentClassPropertyInput{
+					ID:           *property.ID,
+					Label:        *property.Label,
+					Parent:       property.Parent,
+					BindingType:  property.BindingType,
+					PropertyType: *property.PropertyType,
+					EquipmentClassVersion: &domain.EquipmentClassVersionRef{
+						Iid: &latestVersion.Iid,
+					},
+					ValueUnitOfMeasure: property.ValueUnitOfMeasure,
+				})
+				if err != nil {
+					log.Printf("\t\t\tFailed to input property with ID \"%s\": %s\n", *property.ID, err)
+				}
+			}
+		} else {
+			log.Printf("\t\tLatest version is an active version (%s), creating a new draft version\n", latestVersion.Version)
+
+			newVersion := getNewVersion(ctx, client, equipmentClass)
+
 			// Create a draft version
-			_, err = types.SaveEquipmentClassVersionAs(
+			newVersionIid, err := types.SaveEquipmentClassVersionAs(
 				ctx,
 				client,
 				equipmentClassId,
-				strconv.Itoa(latestVersionNum),
-				strconv.Itoa(latestVersionNum+1),
+				latestVersion.Version,
+				newVersion,
 			)
-			equipmentClassVersion = strconv.Itoa(latestVersionNum + 1)
-		}
-		if err != nil {
-			panic(err)
+			if err != nil {
+				panic(err)
+			}
+
+			version, err := types.GetEquipmentClassVersion(ctx, client, equipmentClassId, newVersion)
+			if err != nil {
+				panic(err)
+			}
+
+			prefix := len(equipmentClassName) + 3 // +3 for ".1."
+			for i := range properties {
+				id := *properties[i].ID
+				id = equipmentClassName + "." + newVersion + "." + id[prefix:]
+				properties[i].ID = &id
+
+				if properties[i].Parent != nil {
+					parentId := *properties[i].Parent.ID
+					parentId = equipmentClassName + "." + newVersion + "." + parentId[prefix:]
+					properties[i].Parent.ID = &parentId
+				}
+			}
+
+			for _, property := range version.Properties {
+				log.Printf("\t\tRemoving property \"%s\"\n", property.ID)
+				err := types.DeleteEquipmentClassProperty(ctx, client, property.Iid)
+				if err != nil {
+					log.Printf("\t\t\tFailed to remove property with ID \"%s\": %s\n", property.ID, err)
+				}
+			}
+			for _, property := range properties {
+				log.Printf("\t\tAdding property \"%s\"\n", *property.ID)
+				err := types.CreateEquipmentClassProperty(ctx, client, &domain.AddEquipmentClassPropertyInput{
+					ID:           *property.ID,
+					Label:        *property.Label,
+					Parent:       property.Parent,
+					BindingType:  property.BindingType,
+					PropertyType: *property.PropertyType,
+					EquipmentClassVersion: &domain.EquipmentClassVersionRef{
+						Iid: &newVersionIid,
+					},
+					ValueUnitOfMeasure: property.ValueUnitOfMeasure,
+				})
+				if err != nil {
+					log.Printf("\t\t\tFailed to input property with ID \"%s\": %s\n", *property.ID, err)
+				}
+			}
 		}
 	} else {
 		// Else if doesn't exist, then add a new Equipment Class
@@ -152,26 +228,105 @@ search:
 		}
 
 		equipmentClassVersion = "1"
-	}
+		// Add Equipment Properties
+		log.Println("\tAdding Equipment Properties")
 
-	// Add Equipment Properties
-	log.Println("\tAdding Equipment Properties")
-
-	for _, property := range properties {
-		err := types.CreateEquipmentClassProperty(ctx, client, &domain.AddEquipmentClassPropertyInput{
-			ID:           *property.ID,
-			Label:        *property.Label,
-			Parent:       property.Parent,
-			BindingType:  property.BindingType,
-			PropertyType: *property.PropertyType,
-			EquipmentClassVersion: &domain.EquipmentClassVersionRef{
-				ID:      &equipmentClassName,
-				Version: types.StringPtr(equipmentClassVersion),
-			},
-			ValueUnitOfMeasure: property.ValueUnitOfMeasure,
-		})
-		if err != nil {
-			log.Printf("\t\tFailed to input property with ID \"%s\": %s\n", *property.ID, err)
+		for _, property := range properties {
+			err := types.CreateEquipmentClassProperty(ctx, client, &domain.AddEquipmentClassPropertyInput{
+				ID:           *property.ID,
+				Label:        *property.Label,
+				Parent:       property.Parent,
+				BindingType:  property.BindingType,
+				PropertyType: *property.PropertyType,
+				EquipmentClassVersion: &domain.EquipmentClassVersionRef{
+					ID:      &equipmentClassName,
+					Version: types.StringPtr(equipmentClassVersion),
+				},
+				ValueUnitOfMeasure: property.ValueUnitOfMeasure,
+			})
+			if err != nil {
+				log.Printf("\t\tFailed to input property with ID \"%s\": %s\n", *property.ID, err)
+			}
 		}
 	}
+
+}
+
+func pickLatestVersion(versions []*domain.EquipmentClassVersion, draftOnly bool) *domain.EquipmentClassVersion {
+
+	var thisVersions []*domain.EquipmentClassVersion
+
+	if draftOnly {
+		for _, version := range versions {
+			if version.VersionStatus == domain.VersionStateDraft {
+				thisVersions = append(thisVersions, version)
+			}
+		}
+		return nil
+	} else {
+		thisVersions = make([]*domain.EquipmentClassVersion, len(versions))
+		copy(thisVersions, versions)
+	}
+
+	if len(thisVersions) == 0 {
+		return nil
+	}
+
+	if len(thisVersions) == 1 {
+		return thisVersions[0]
+	}
+
+	index := 0
+	latestVersionNum := thisVersions[index].Version
+
+	for i, version := range thisVersions[1:] {
+		versionNum, err := strconv.Atoi(version.Version)
+		if err != nil {
+			// compare strings if not integers
+			if version.Version > latestVersionNum {
+				latestVersionNum = version.Version
+				index = i
+			}
+		}
+		currentNum, err := strconv.Atoi(latestVersionNum)
+		if err != nil {
+			// compare strings if not integers
+			if version.Version > latestVersionNum {
+				latestVersionNum = version.Version
+				index = i
+			}
+		}
+		if versionNum > currentNum {
+			latestVersionNum = version.Version
+			index = i + 1
+		}
+	}
+
+	return thisVersions[index]
+}
+
+func getNewVersion(ctx context.Context, client *graphql.Client, equipmentClass *domain.EquipmentClass) string {
+	latestVersion := pickLatestVersion(equipmentClass.Versions, false)
+
+	latestVersionNum, err := strconv.Atoi(latestVersion.Version)
+	if err != nil {
+		ok := true
+		latestVersionNum = len(equipmentClass.Versions) + 1
+		for ok {
+			equipmentClassVersion, err := types.GetEquipmentClassVersion(ctx, client, equipmentClass.ID, strconv.Itoa(latestVersionNum))
+			if err != nil {
+				panic(err)
+			}
+
+			if equipmentClassVersion == nil {
+				ok = false
+			} else {
+				latestVersionNum++
+			}
+		}
+	} else {
+		latestVersionNum++
+	}
+
+	return strconv.Itoa(latestVersionNum)
 }

@@ -86,6 +86,11 @@ type StringExactFilterStringFullTextFilterStringRegExpFilter struct {
 	Eq *string `json:"eq,omitempty"`
 }
 
+type UnitOfMeasure struct {
+	ID       string    `json:"id,omitempty"`
+	DataType *DataType `json:"dataType,omitempty"`
+}
+
 type UnitOfMeasureRef struct {
 	ID *string `json:"id,omitempty"`
 }
@@ -95,7 +100,18 @@ type AddUnitOfMeasureInput struct {
 	ID       string    `json:"id,omitempty"`
 }
 
+type EquipmentClassProperty struct {
+	Iid                string                     `json:"iid,omitempty"`
+	ID                 string                     `json:"id,omitempty"`
+	Label              string                     `json:"label,omitempty"`
+	BindingType        PropertyBindingType        `json:"bindingType,omitempty"`
+	Parent             *EquipmentClassPropertyRef `json:"parent,omitempty"`
+	PropertyType       Isa95PropertyType          `json:"propertyType,omitempty"`
+	ValueUnitOfMeasure *UnitOfMeasureRef          `json:"valueUnitOfMeasure,omitempty"`
+}
+
 type EquipmentClassPropertyRef struct {
+	Iid                   *string                    `json:"iid,omitempty"`
 	BindingType           *PropertyBindingType       `json:"bindingType,omitempty"`
 	EquipmentClassVersion *EquipmentClassVersionRef  `json:"equipmentClassVersion,omitempty"`
 	ID                    *string                    `json:"id,omitempty"`
@@ -116,6 +132,7 @@ type AddEquipmentClassPropertyInput struct {
 }
 
 type EquipmentClass struct {
+	Iid      string                   `json:"iid,omitempty"`
 	ID       string                   `json:"id,omitempty"`
 	Versions []*EquipmentClassVersion `json:"versions,omitempty"`
 }
@@ -128,9 +145,11 @@ type AddEquipmentClassInput struct {
 }
 
 type EquipmentClassVersion struct {
-	Iid           string       `json:"iid,omitempty"`
-	Version       string       `json:"version,omitempty"`
-	VersionStatus VersionState `json:"versionStatus,omitempty"`
+	Iid           string                    `json:"iid,omitempty"`
+	ID            string                    `json:"id,omitempty"`
+	Version       string                    `json:"version,omitempty"`
+	VersionStatus VersionState              `json:"versionStatus,omitempty"`
+	Properties    []*EquipmentClassProperty `json:"properties,omitempty"`
 }
 
 type UpdateEquipmentClassInput struct {

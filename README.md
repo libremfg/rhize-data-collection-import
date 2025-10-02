@@ -19,24 +19,26 @@ This tool facilitates the import of equipment data and related information from 
 Flags for the importer can be seen by using the `--help` flag. Default values show examples values.
 ```shell
 $ ./rhize-import.exe --help
+  -apiUrl string
+        URL for Rhize API (default "http://localhost:8080/graphql")
   -auth
         Authenticate Client (default true)
-  -auth-host string
-        URL for Auth (default "http://localhost:8090")
+  -authUrl string
+        URL for Keycloak Auth (default "http://localhost:8090")
   -clientId string
         Client ID (default "libreBaas")
   -clientSecret string
-        Client Secret (default "7a7m7IBF0THzyx7K7H4SsgwA5If1xYMO")
+        Client Secret (default "FGY1N5eJQHg3EkOOc5O3IaM4op8o2anT")
   -description string
         Equipment Class description used in import for CSV
   -file string
-        Excel/CSV file to import data from
+        Excel/CSV file to import data from (default "./Copy of OPC_UA-CS_NBXT Extrusion Data Information.xlsx")
   -password string
         Authentication Password (default "admin")
+  -realm string
+        Keycloak Realm (default "libre")
   -sheet string
-        Name of sheet to import data from
-  -url string
-        URL for Rhize (default "http://localhost:8080/graphql")
+        Name of sheet to import data from (default "40084-3_Feeder")
   -user string
         Authentication Username (default "admin")
 ```
@@ -68,22 +70,23 @@ $ ./rhize-importer.exe \
 
 | Flag | Description | Default |
 |------|-------------|---------|
-| `-file` | Path to Excel/CSV file to import | (required) |
-| `-description` | Equipment Class description used in import | (required) |
-| `-sheet` | Name of sheet to import data from | (optional) |
+| `-apiUrl` | URL for Rhize API | `http://localhost:8080/graphql` |
 | `-auth` | Enable/disable authentication | `true` |
-| `-auth-host` | URL for Auth service | `http://localhost:8090` |
+| `-authUrl` | URL for Keycloak Auth | `http://localhost:8090` |
 | `-clientId` | Client ID for authentication | `libreBaas` |
 | `-clientSecret` | Client secret for authentication | `FGY1N5eJQHg3EkOOc5O3IaM4op8o2anT` |
-| `-user` | Authentication username | `admin` |
+| `-description` | Equipment Class description used in import | (required) |
+| `-file` | Path to Excel/CSV file to import | (required) |
 | `-password` | Authentication password | `admin` |
-| `-url` | URL for Libre backend | `http://localhost:8080/graphql` |
+| `-realm` | Keycloak Realm | `libre` |
+| `-sheet` | Name of sheet to import data from | (optional) |
+| `-user` | Authentication username | `admin` |
 
 ## Prerequisites
 
 - Go 1.24 or higher
-- Access to a Libre backend system
-- Authentication credentials for the Libre backend
+- Access to a Rhzie backend system
+- Authentication credentials for the Rhize backend
 
 ## Contributing
 
@@ -99,12 +102,13 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Change log
 
+- v1.2.0 T.H.
+  - Change behaviour to create new draft version (or update current draft), Otherwise create a completely new Equipment Class
 - v1.1.0 T.H.
   - Change properties to Class type from Instance
   - Change properties without a datatype to Static from Bound
 - v1.0.0 J.W.
   - Initial Release
-
 
 ## Support
 

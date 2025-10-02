@@ -28,6 +28,13 @@ func Import(config types.Configuration) {
 		log.Fatal("Error reading file:", err)
 	}
 
+	// If UoM ID is not set, set it to DataType
+	for i := range equipmentImportData.EquipmentClassProperties {
+		if equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.ID == "" && equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.DataType != "" {
+			equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.ID = equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.DataType
+		}
+	}
+
 	log.Println("Adding Imported Unit of Measures")
 	UnitOfMeasure(config.Context, client, *equipmentImportData)
 	log.Println("Done Imported Unit of Measures")
