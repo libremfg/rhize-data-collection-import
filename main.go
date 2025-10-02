@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const versionString = "rhize-data-collection-import v1.0.0"
+const versionString = "rhize-data-collection-import v1.2.0"
 
 var (
 	bFile        = flag.String("file", "", "Excel/CSV file to import data from")
