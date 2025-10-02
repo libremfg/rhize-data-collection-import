@@ -27,8 +27,6 @@ out:
 			}
 		}
 
-		log.Printf("\tAdding UoM for %s", uom)
-
 		var dataType domain.DataType
 
 		switch property.UnitOfMeasure.DataType {
@@ -52,14 +50,27 @@ out:
 			dataType = domain.DataTypeString
 		}
 
-		units = append(units, domain.AddUnitOfMeasureInput{
+		unit := domain.AddUnitOfMeasureInput{
 			ID:       uom,
 			DataType: &dataType,
-		})
+		}
+		units = append(units, unit)
+
+		existingUoM, err := types.GetUnitOfMeasure(ctx, client, uom)
+		if err != nil {
+			log.Printf("could not query unit of measure: %s", err.Error())
+			continue out
+		}
+		if existingUoM != nil {
+			log.Printf("\tUnit of Measure %s already exists, skipping", uom)
+			continue out
+		}
+
+		log.Printf("\tAdding UoM for %s", uom)
+		err = types.CreateUnitOfMeasure(ctx, client, []domain.AddUnitOfMeasureInput{unit})
+		if err != nil {
+			log.Printf("could not add unit of measure: %s", err.Error())
+		}
 	}
 
-	err := types.CreateUnitOfMeasure(ctx, client, units)
-	if err != nil {
-		log.Printf("could not add unit of measure: %s", err.Error())
-	}
 }

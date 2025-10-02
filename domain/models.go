@@ -86,6 +86,11 @@ type StringExactFilterStringFullTextFilterStringRegExpFilter struct {
 	Eq *string `json:"eq,omitempty"`
 }
 
+type UnitOfMeasure struct {
+	ID       string    `json:"id,omitempty"`
+	DataType *DataType `json:"dataType,omitempty"`
+}
+
 type UnitOfMeasureRef struct {
 	ID *string `json:"id,omitempty"`
 }

@@ -43,8 +43,14 @@ func main() {
 		Timeout: time.Second * 5,
 	}
 
+	var err error
+
 	if *bAuth {
-		client = auth.Authenticate(ctx, *sAuthUrl, *sUser, *sPassword, *sRealm, *sClientID, *sClientSecret)
+		client, err = auth.Authenticate(ctx, *sAuthUrl, *sUser, *sPassword, *sRealm, *sClientID, *sClientSecret)
+		if err != nil {
+			log.Fatalf("Authentication failed: %v", err)
+			return
+		}
 	}
 
 	// Setup Configuration

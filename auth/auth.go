@@ -14,7 +14,7 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func Authenticate(ctx context.Context, authUrl, username, password, realm, clientId, clientSecret string) *http.Client {
+func Authenticate(ctx context.Context, authUrl, username, password, realm, clientId, clientSecret string) (*http.Client, error) {
 	body := []byte("grant_type=password&username=" + url.QueryEscape(username) + "&password=" + url.QueryEscape(password) + "&client_id=" + url.QueryEscape(clientId) + "&client_secret=" + url.QueryEscape(clientSecret))
 	req, err := http.NewRequest("POST", fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", authUrl, realm), bytes.NewBuffer(body))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
@@ -50,9 +50,10 @@ func Authenticate(ctx context.Context, authUrl, username, password, realm, clien
 		log.Println("Log in Successfully")
 	} else {
 		log.Printf("Log in failed - %s\n", string(respBytes))
+		return nil, fmt.Errorf("login failed: %s", string(respBytes))
 	}
 
-	return client
+	return client, nil
 }
 
 type LoginResponse struct {
