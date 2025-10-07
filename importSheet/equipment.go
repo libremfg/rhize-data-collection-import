@@ -13,7 +13,12 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
-func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData EquipmentImportData) {
+func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
+	setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
+	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
+}
+
+func setupEquipmentClass(ctx context.Context, client *graphql.Client, equipmentImportData EquipmentClassImportData) {
 	properties := make([]*domain.EquipmentClassPropertyRef, 0)
 
 	bound := domain.PropertyBindingTypeBound
@@ -249,7 +254,6 @@ search:
 			}
 		}
 	}
-
 }
 
 func pickLatestVersion(versions []*domain.EquipmentClassVersion, draftOnly bool) *domain.EquipmentClassVersion {
@@ -329,4 +333,39 @@ func getNewVersion(ctx context.Context, client *graphql.Client, equipmentClass *
 	}
 
 	return strconv.Itoa(latestVersionNum)
+}
+
+func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImportData []EquipmentImportData, equipmentClass string, datasource string) {
+	for i, equipment := range equipmentImportData {
+		equipmentPayload := types.GetEquipmentPayload(equipment.EquipmentName, "", "EquipmentModule", i)
+		equipmentPayload.Versions[0].EquipmentClasses = []*domain.EquipmentClassRef{
+			{
+				ID: types.StringPtr(equipmentClass),
+			},
+		}
+		equipmentPayload.Versions[0].DataSources = []*domain.EquipmentDataSourceRef{
+			{
+				DataSource: &domain.DataSourceRef{
+					ID: types.StringPtr(datasource),
+				},
+			},
+		}
+		propertyNameAliases := make([]*domain.PropertyNameAliasRef, 0)
+		for _, binding := range equipment.EquipmentTagBindings {
+			propertyNameAliases = append(propertyNameAliases, &domain.PropertyNameAliasRef{
+				DataSource: &domain.DataSourceRef{
+					ID: types.StringPtr(datasource),
+				},
+				DataSourceTopicLabel: types.StringPtr(binding.Tag),
+				PropertyLabel:        types.StringPtr(binding.PropertyID),
+			})
+		}
+		equipmentPayload.Versions[0].PropertyNameAliases = propertyNameAliases
+
+		err := types.CreateEquipment(ctx, client, equipmentPayload)
+		if err != nil {
+			panic(err)
+		}
+
+	}
 }

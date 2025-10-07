@@ -175,3 +175,72 @@ type EquipmentClassVersionRef struct {
 	Version        *string                      `json:"version,omitempty"`
 	VersionStatus  *VersionState                `json:"versionStatus,omitempty"`
 }
+
+// Equipment
+
+type AddEquipmentInput struct {
+	ID          string                 `json:"id,omitempty"`
+	Label       string                 `json:"label,omitempty"`
+	UISortIndex *int                   `json:"uiSortIndex,omitempty"`
+	Versions    []*EquipmentVersionRef `json:"versions,omitempty"`
+}
+
+type EquipmentVersionRef struct {
+	DataSources         []*EquipmentDataSourceRef `json:"dataSources,omitempty"`
+	Description         *string                   `json:"description,omitempty"`
+	DisplayName         *string                   `json:"displayName,omitempty"`
+	EquipmentClasses    []*EquipmentClassRef      `json:"equipmentClasses,omitempty"`
+	EquipmentLevel      *EquipmentElementLevel    `json:"equipmentLevel,omitempty"`
+	ID                  *string                   `json:"id,omitempty"`
+	Iid                 *string                   `json:"iid,omitempty"`
+	PropertyNameAliases []*PropertyNameAliasRef   `json:"propertyNameAliases,omitempty"`
+	TimeZoneName        *string                   `json:"timeZoneName,omitempty"`
+	Version             *string                   `json:"version,omitempty"`
+	VersionStatus       *VersionState             `json:"versionStatus,omitempty"`
+}
+
+type UpdateEquipmentInput struct {
+	Filter *EquipmentFilter `json:"filter,omitempty"`
+	Set    *EquipmentPatch  `json:"set,omitempty"`
+}
+
+type EquipmentFilter struct {
+	ID *StringExactFilterStringFullTextFilterStringRegExpFilter `json:"id,omitempty"`
+}
+
+type EquipmentPatch struct {
+	ActiveVersion *EquipmentVersionRef `json:"activeVersion,omitempty"`
+}
+
+type Equipment struct {
+	ActiveVersion *EquipmentVersion   `json:"activeVersion,omitempty"`
+	ID            string              `json:"id,omitempty"`
+	Iid           string              `json:"iid,omitempty"`
+	Label         string              `json:"label,omitempty"`
+	Versions      []*EquipmentVersion `json:"versions,omitempty"`
+}
+
+type EquipmentVersion struct {
+	ID            string       `json:"id,omitempty"`
+	Iid           string       `json:"iid,omitempty"`
+	Version       string       `json:"version,omitempty"`
+	VersionStatus VersionState `json:"versionStatus,omitempty"`
+}
+
+type EquipmentClassRef struct {
+	ID *string `json:"id,omitempty"`
+}
+
+type EquipmentDataSourceRef struct {
+	DataSource *DataSourceRef `json:"dataSource,omitempty"`
+}
+
+type DataSourceRef struct {
+	ID *string `json:"id,omitempty"`
+}
+
+type PropertyNameAliasRef struct {
+	DataSource           *DataSourceRef `json:"dataSource,omitempty"`
+	DataSourceTopicLabel *string        `json:"dataSourceTopicLabel,omitempty"`
+	PropertyLabel        *string        `json:"propertyLabel,omitempty"`
+}
