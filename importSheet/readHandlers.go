@@ -110,7 +110,7 @@ func ReadXLSX(filePath string, sheet string, datasource string) (*ImportData, er
 	equipmentData := make([]EquipmentImportData, 0)
 
 	if datasource != "" {
-		for i := 13; i < len(rows[0]); i += 7 {
+		for i := 13; i < len(rows[0]); i += 6 {
 			if rows[0][i] == "" {
 				break
 			}
@@ -135,6 +135,10 @@ func ReadXLSX(filePath string, sheet string, datasource string) (*ImportData, er
 				EquipmentTagBindings: tagBindings,
 			}
 			equipmentData = append(equipmentData, data)
+			// To-Do: Find a better solution to uneven column amounts than the below solutions
+			if i == 13 {
+				i++
+			}
 		}
 	}
 
