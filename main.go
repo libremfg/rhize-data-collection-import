@@ -21,6 +21,7 @@ var (
 	bDescription = flag.String("description", "", "Equipment Class description used in import for CSV")
 	bSheet       = flag.String("sheet", "", "Name of sheet to import data from")
 	bDatasource  = flag.String("datasource", "", "Datasource to bind topics with")
+	bTarget      = flag.String("target", "", "Target type of import data")
 
 	/* Auth */
 	bAuth         = flag.Bool("auth", true, "Authenticate Client")
@@ -90,6 +91,7 @@ func main() {
 		Sheet:                     bSheet,
 		EquipmentClassDescription: bDescription,
 		Datasource:                bDatasource,
+		Target:                    bTarget,
 	}
 
 	log.Println("Importing sheet " + *bSheet + " from file " + *bFile)

@@ -101,6 +101,10 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.4.0 J.W.
+  - Add flag `target` for specifying which resource to import data for
+  - Fix issue where bindings were not being added
+  - Fix issue where topic and binding checks were swapped
 - v1.3.0 J.W.
   - Add Equipment binding setups from a given Datasource
   - Add support for loading auth information from environment or .env

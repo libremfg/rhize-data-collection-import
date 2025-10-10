@@ -13,13 +13,8 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
-func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
+func EquipmentClassModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
 	setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
-	if equipmentImportData.Datasource == "" {
-		log.Printf("\tNo Datasource provided, skipping Equipment bindings")
-		return
-	}
-	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
 }
 
 func setupEquipmentClass(ctx context.Context, client *graphql.Client, equipmentImportData EquipmentClassImportData) {
@@ -339,6 +334,14 @@ func getNewVersion(ctx context.Context, client *graphql.Client, equipmentClass *
 	return strconv.Itoa(latestVersionNum)
 }
 
+func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
+	if equipmentImportData.Datasource == "" {
+		log.Printf("\tNo Datasource provided, skipping Equipment bindings")
+		return
+	}
+	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
+}
+
 func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImportData []EquipmentImportData, equipmentClass string, datasource string) {
 	log.Printf("\tSetting up Equipment bindings")
 
@@ -353,7 +356,6 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		return
 	}
 
-equipment_loop:
 	for _, equipment := range equipmentImportData {
 		log.Printf("\t\tAdding bindings for Equipment \"%s\"\n", equipment.EquipmentName)
 
@@ -369,13 +371,13 @@ equipment_loop:
 		for _, binding := range equipment.EquipmentTagBindings {
 			// Make sure that the topic exists in the Datasource
 			found := false
-			for _, alias := range latestVersion.PropertyNameAliases {
-				if alias.PropertyLabel == binding.PropertyID {
+			for _, topic := range ds.ActiveVersion.Topics {
+				if topic.Label == binding.Tag {
 					found = true
 					break
 				}
 			}
-			if found {
+			if !found {
 				log.Printf("\t\t\tCould not find topic \"%s\" inside of Datasource \"%s\", skipping this binding", binding.Tag, datasource)
 				continue
 			}
@@ -384,16 +386,16 @@ equipment_loop:
 			// If binded, recommend removing the binding in the UI
 			if latestVersion.VersionStatus != domain.VersionStateActive {
 				found = false
-				for _, topic := range ds.ActiveVersion.Topics {
-					if topic.Label == binding.Tag {
+				for _, alias := range latestVersion.PropertyNameAliases {
+					if alias.PropertyLabel == binding.PropertyID {
 						found = true
 						break
 					}
 				}
-				if !found {
+				if found {
 					// To-Do: Grab iid of alias and run a delete on it
-					log.Printf("\t\t\tBinding for Property \"%s\" already exists, remove this binding and retry utility.", binding.PropertyID)
-					continue equipment_loop // By continuing the equipment loop, the setup for this equipment will be skipped, allowing multiple runs without issue
+					log.Printf("\t\t\tBinding for Property \"%s\" already exists, skipping this binding.", binding.PropertyID)
+					continue
 				}
 			}
 
