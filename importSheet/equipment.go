@@ -371,13 +371,13 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		for _, binding := range equipment.EquipmentTagBindings {
 			// Make sure that the topic exists in the Datasource
 			found := false
-			for _, alias := range latestVersion.PropertyNameAliases {
-				if alias.PropertyLabel == binding.PropertyID {
+			for _, topic := range ds.ActiveVersion.Topics {
+				if topic.Label == binding.Tag {
 					found = true
 					break
 				}
 			}
-			if found {
+			if !found {
 				log.Printf("\t\t\tCould not find topic \"%s\" inside of Datasource \"%s\", skipping this binding", binding.Tag, datasource)
 				continue
 			}
@@ -386,8 +386,8 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 			// If binded, recommend removing the binding in the UI
 			if latestVersion.VersionStatus != domain.VersionStateActive {
 				found = false
-				for _, topic := range ds.ActiveVersion.Topics {
-					if topic.Label == binding.Tag {
+				for _, alias := range latestVersion.PropertyNameAliases {
+					if alias.PropertyLabel == binding.PropertyID {
 						found = true
 						break
 					}
