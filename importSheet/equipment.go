@@ -414,6 +414,10 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 			log.Printf("\t\t\tLatest version of Equipment with ID \"%s\" is an Active Version, please create a new Draft Version and rerun the utility\n", equipment.EquipmentName)
 			continue
 		} else {
+			if len(propertyNameAliases) == 0 {
+				log.Println("\t\t\tNo available topics to bind, skipping binding")
+			}
+
 			// Assume Draft
 			err := types.SetEquipmentBinds(ctx, client, equipment.EquipmentName, latestVersion.Version, datasource, propertyNameAliases)
 			if err != nil {

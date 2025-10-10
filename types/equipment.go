@@ -156,13 +156,13 @@ func SetEquipmentBinds(ctx context.Context, client *graphql.Client, equipmentId 
 				},
 			},
 			Set: &domain.EquipmentVersionPatch{
-				DataSources: []*domain.EquipmentDataSourceRef{
-					{
-						DataSource: &domain.DataSourceRef{
-							ID: StringPtr(dataSourceId),
-						},
-					},
-				},
+				// DataSources: []*domain.EquipmentDataSourceRef{
+				// 	{
+				// 		DataSource: &domain.DataSourceRef{
+				// 			ID: StringPtr(dataSourceId),
+				// 		},
+				// 	},
+				// },
 				PropertyNameAliases: propertyNameAliases,
 			},
 		},
