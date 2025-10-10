@@ -12,4 +12,5 @@ type Configuration struct {
 	FilePath                  *string
 	Sheet                     *string
 	EquipmentClassDescription *string
+	Datasource                *string
 }

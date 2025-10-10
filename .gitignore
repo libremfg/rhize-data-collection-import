@@ -1,2 +1,4 @@
 *.exe
 *.xlsx
+*.csv
+.env

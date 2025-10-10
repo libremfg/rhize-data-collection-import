@@ -8,7 +8,7 @@ import (
 	"github.com/xuri/excelize/v2"
 )
 
-func ReadCSV(filePath string, description string) (*EquipmentImportData, error) {
+func ReadCSV(filePath string, description string) (*ImportData, error) {
 	// Read file into records
 	file, err := os.Open(filePath)
 	if err != nil {
@@ -23,8 +23,8 @@ func ReadCSV(filePath string, description string) (*EquipmentImportData, error) 
 		return nil, err
 	}
 
-	// Handle data
-	data := EquipmentImportData{
+	// Handle Equipment Class Data
+	equipmentClassData := EquipmentClassImportData{
 		EquipmentClassName:        records[4][0],
 		EquipmentClassDescription: description,
 	}
@@ -44,10 +44,17 @@ func ReadCSV(filePath string, description string) (*EquipmentImportData, error) 
 		})
 	}
 
+	// Handle Import Data
+	data := ImportData{
+		Datasource:               "",
+		EquipmentImportData:      nil,
+		EquipmentClassImportData: equipmentClassData,
+	}
+
 	return &data, nil
 }
 
-func ReadXLSX(filePath string, sheet string) (*EquipmentImportData, error) {
+func ReadXLSX(filePath string, sheet string, datasource string) (*ImportData, error) {
 	// Read file
 	file, err := excelize.OpenFile(filePath)
 	if err != nil {
@@ -60,7 +67,7 @@ func ReadXLSX(filePath string, sheet string) (*EquipmentImportData, error) {
 		}
 	}()
 
-	// Handle data
+	// Handle Equipment Class Data
 	equipmentClassName, err := file.GetCellValue(sheet, "A3")
 	if err != nil {
 		return nil, err
@@ -71,7 +78,7 @@ func ReadXLSX(filePath string, sheet string) (*EquipmentImportData, error) {
 		return nil, err
 	}
 
-	data := EquipmentImportData{
+	equipmentClassData := EquipmentClassImportData{
 		EquipmentClassName:        equipmentClassName,
 		EquipmentClassDescription: sheet,
 	}
@@ -97,7 +104,50 @@ func ReadXLSX(filePath string, sheet string) (*EquipmentImportData, error) {
 			Use: row[12] == "X",
 		})
 	}
-	data.EquipmentClassProperties = equipmentClassPropertyData
+	equipmentClassData.EquipmentClassProperties = equipmentClassPropertyData
+
+	// Handle Equipment
+	equipmentData := make([]EquipmentImportData, 0)
+
+	if datasource != "" {
+		for i := 13; i < len(rows[0]); i += 6 {
+			if rows[0][i] == "" {
+				break
+			}
+			tagBindings := make([]EquipmentTagBindingData, 0)
+			for j := 3; j < len(rows); j++ {
+				row := rows[j]
+				if len(row) <= i+2 || row[i+2] == "" {
+					continue
+				}
+				// Filter out Equipment Class name at start as it goes unused in binding
+				propertyId := row[1][1+len(equipmentClassName):]
+
+				tagBinding := EquipmentTagBindingData{
+					PropertyID: propertyId,
+					Tag:        row[i+2],
+				}
+				tagBindings = append(tagBindings, tagBinding)
+			}
+
+			data := EquipmentImportData{
+				EquipmentName:        rows[0][i],
+				EquipmentTagBindings: tagBindings,
+			}
+			equipmentData = append(equipmentData, data)
+			// To-Do: Find a better solution to uneven column amounts than the below solutions
+			if i == 13 {
+				i++
+			}
+		}
+	}
+
+	// Handle Import Data
+	data := ImportData{
+		Datasource:               datasource,
+		EquipmentImportData:      equipmentData,
+		EquipmentClassImportData: equipmentClassData,
+	}
 
 	return &data, nil
 }

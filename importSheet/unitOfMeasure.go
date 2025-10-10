@@ -10,11 +10,11 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
-func UnitOfMeasure(ctx context.Context, client *graphql.Client, equipmentImportData EquipmentImportData) {
+func UnitOfMeasure(ctx context.Context, client *graphql.Client, equipmentClassImportData EquipmentClassImportData) {
 	units := make([]domain.AddUnitOfMeasureInput, 0)
 
 out:
-	for _, property := range equipmentImportData.EquipmentClassProperties {
+	for _, property := range equipmentClassImportData.EquipmentClassProperties {
 		uom := property.UnitOfMeasure.ID
 		if uom == "" {
 			continue out

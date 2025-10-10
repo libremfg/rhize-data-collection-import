@@ -13,14 +13,14 @@ func Import(config types.Configuration) {
 	client := graphql.NewClient(*config.URL, config.Client)
 
 	// Determine file type
-	var equipmentImportData *EquipmentImportData
+	var equipmentImportData *ImportData
 	var err error
 
 	switch filepath.Ext(*config.FilePath) {
 	case ".csv":
 		equipmentImportData, err = ReadCSV(*config.FilePath, *config.EquipmentClassDescription)
 	case ".xlsx":
-		equipmentImportData, err = ReadXLSX(*config.FilePath, *config.Sheet)
+		equipmentImportData, err = ReadXLSX(*config.FilePath, *config.Sheet, *config.Datasource)
 	default:
 		log.Fatalf("Unsupported file extension \"%s\"\n", filepath.Ext(*config.FilePath))
 	}
@@ -29,14 +29,14 @@ func Import(config types.Configuration) {
 	}
 
 	// If UoM ID is not set, set it to DataType
-	for i := range equipmentImportData.EquipmentClassProperties {
-		if equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.ID == "" && equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.DataType != "" {
-			equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.ID = equipmentImportData.EquipmentClassProperties[i].UnitOfMeasure.DataType
+	for i := range equipmentImportData.EquipmentClassImportData.EquipmentClassProperties {
+		if equipmentImportData.EquipmentClassImportData.EquipmentClassProperties[i].UnitOfMeasure.ID == "" && equipmentImportData.EquipmentClassImportData.EquipmentClassProperties[i].UnitOfMeasure.DataType != "" {
+			equipmentImportData.EquipmentClassImportData.EquipmentClassProperties[i].UnitOfMeasure.ID = equipmentImportData.EquipmentClassImportData.EquipmentClassProperties[i].UnitOfMeasure.DataType
 		}
 	}
 
 	log.Println("Adding Imported Unit of Measures")
-	UnitOfMeasure(config.Context, client, *equipmentImportData)
+	UnitOfMeasure(config.Context, client, *&equipmentImportData.EquipmentClassImportData)
 	log.Println("Done Imported Unit of Measures")
 
 	log.Println("Adding Imported Equipment model")
@@ -46,7 +46,26 @@ func Import(config types.Configuration) {
 	log.Println("Done Imported model")
 }
 
+// Import
+type ImportData struct {
+	Datasource               string
+	EquipmentImportData      []EquipmentImportData
+	EquipmentClassImportData EquipmentClassImportData
+}
+
+// Equipment
 type EquipmentImportData struct {
+	EquipmentName        string
+	EquipmentTagBindings []EquipmentTagBindingData
+}
+
+type EquipmentTagBindingData struct {
+	PropertyID string
+	Tag        string
+}
+
+// Equipment Class
+type EquipmentClassImportData struct {
 	EquipmentClassName        string
 	EquipmentClassDescription string
 	EquipmentClassProperties  []EquipmentClassPropertyData

@@ -6,6 +6,7 @@ toolchain go1.24.7
 
 require (
 	github.com/hasura/go-graphql-client v0.14.4
+	github.com/joho/godotenv v1.5.1
 	github.com/xuri/excelize/v2 v2.9.1
 	golang.org/x/oauth2 v0.31.0
 )
