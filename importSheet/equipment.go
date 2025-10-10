@@ -14,7 +14,11 @@ import (
 )
 
 func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
-	// setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
+	setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
+	if equipmentImportData.Datasource == "" {
+		log.Printf("\tNo Datasource provided, skipping Equipment bindings")
+		return
+	}
 	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
 }
 
