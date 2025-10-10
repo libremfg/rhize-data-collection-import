@@ -101,6 +101,9 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.4.1 J.W.
+  - Change to require adding Datasources to Equipment manually
+  - Fix duplicate Datasources appearing on Equipment after binding
 - v1.4.0 J.W.
   - Add flag `target` for specifying which resource to import data for
   - Fix issue where bindings were not being added
