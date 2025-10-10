@@ -70,7 +70,7 @@ func main() {
 	password := *sPassword
 	if password == "" {
 		log.Printf("No Password set, loading from .env")
-		user = os.Getenv("RHIZE_OIDC_PASSWORD")
+		password = os.Getenv("RHIZE_OIDC_PASSWORD")
 	}
 
 	if *bAuth {
