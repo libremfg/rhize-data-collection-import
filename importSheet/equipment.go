@@ -353,7 +353,6 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		return
 	}
 
-equipment_loop:
 	for _, equipment := range equipmentImportData {
 		log.Printf("\t\tAdding bindings for Equipment \"%s\"\n", equipment.EquipmentName)
 
@@ -390,10 +389,10 @@ equipment_loop:
 						break
 					}
 				}
-				if !found {
+				if found {
 					// To-Do: Grab iid of alias and run a delete on it
-					log.Printf("\t\t\tBinding for Property \"%s\" already exists, remove this binding and retry utility.", binding.PropertyID)
-					continue equipment_loop // By continuing the equipment loop, the setup for this equipment will be skipped, allowing multiple runs without issue
+					log.Printf("\t\t\tBinding for Property \"%s\" already exists, skipping this binding.", binding.PropertyID)
+					continue
 				}
 			}
 
