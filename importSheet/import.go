@@ -35,13 +35,22 @@ func Import(config types.Configuration) {
 		}
 	}
 
-	log.Println("Adding Imported Unit of Measures")
-	UnitOfMeasure(config.Context, client, *&equipmentImportData.EquipmentClassImportData)
-	log.Println("Done Imported Unit of Measures")
-
-	log.Println("Adding Imported Equipment model")
-	EquipmentModel(config.Context, client, *equipmentImportData)
-	log.Println("Done Imported Equipment model")
+	switch *config.Target {
+	case "uom":
+		log.Println("Adding Imported Unit of Measures")
+		UnitOfMeasure(config.Context, client, *&equipmentImportData.EquipmentClassImportData)
+		log.Println("Done Imported Unit of Measures")
+	case "equipmentClass":
+		log.Println("Adding Imported Equipment Class model")
+		EquipmentClassModel(config.Context, client, *equipmentImportData)
+		log.Println("Done Imported Equipment Class model")
+	case "equipment":
+		log.Println("Adding Imported Equipment model")
+		EquipmentModel(config.Context, client, *equipmentImportData)
+		log.Println("Done Imported Equipment model")
+	default:
+		log.Fatalf("Uknown target type \"%s\", should be one of: uom, equipmentClass, equipment", *config.Target)
+	}
 
 	log.Println("Done Imported model")
 }

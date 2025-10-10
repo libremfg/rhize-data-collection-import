@@ -13,13 +13,8 @@ import (
 	"github.com/hasura/go-graphql-client"
 )
 
-func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
+func EquipmentClassModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
 	setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
-	if equipmentImportData.Datasource == "" {
-		log.Printf("\tNo Datasource provided, skipping Equipment bindings")
-		return
-	}
-	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
 }
 
 func setupEquipmentClass(ctx context.Context, client *graphql.Client, equipmentImportData EquipmentClassImportData) {
@@ -337,6 +332,14 @@ func getNewVersion(ctx context.Context, client *graphql.Client, equipmentClass *
 	}
 
 	return strconv.Itoa(latestVersionNum)
+}
+
+func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
+	if equipmentImportData.Datasource == "" {
+		log.Printf("\tNo Datasource provided, skipping Equipment bindings")
+		return
+	}
+	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
 }
 
 func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImportData []EquipmentImportData, equipmentClass string, datasource string) {

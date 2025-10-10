@@ -13,4 +13,5 @@ type Configuration struct {
 	Sheet                     *string
 	EquipmentClassDescription *string
 	Datasource                *string
+	Target                    *string
 }
