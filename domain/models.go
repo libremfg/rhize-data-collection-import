@@ -244,3 +244,45 @@ type PropertyNameAliasRef struct {
 	DataSourceTopicLabel *string        `json:"dataSourceTopicLabel,omitempty"`
 	PropertyLabel        *string        `json:"propertyLabel,omitempty"`
 }
+
+type EquipmentVersionFilter struct {
+	ID      *StringExactFilterStringFullTextFilterStringRegExpFilter `json:"id,omitempty"`
+	Version *StringExactFilterStringFullTextFilter                   `json:"version,omitempty"`
+}
+
+type StringExactFilterStringFullTextFilter struct {
+	Eq *string `json:"eq,omitempty"`
+}
+
+type UpdateEquipmentVersionInput struct {
+	Filter *EquipmentVersionFilter `json:"filter,omitempty"`
+	Set    *EquipmentVersionPatch  `json:"set,omitempty"`
+}
+
+type EquipmentVersionPatch struct {
+	DataSources         []*EquipmentDataSourceRef `json:"dataSources,omitempty"`
+	PropertyNameAliases []*PropertyNameAliasRef   `json:"propertyNameAliases,omitempty"`
+}
+
+type DataSource struct {
+	ActiveVersion *DataSourceVersion   `json:"activeVersion,omitempty"`
+	ID            string               `json:"id,omitempty"`
+	Iid           string               `json:"iid,omitempty"`
+	Label         string               `json:"label,omitempty"`
+	Versions      []*DataSourceVersion `json:"versions,omitempty"`
+}
+
+type DataSourceVersion struct {
+	ConnectionString *string            `json:"connectionString,omitempty"`
+	ID               string             `json:"id,omitempty"`
+	Iid              string             `json:"iid,omitempty"`
+	Topics           []*DataSourceTopic `json:"topics,omitempty"`
+	Version          string             `json:"version,omitempty"`
+	VersionStatus    VersionState       `json:"versionStatus,omitempty"`
+}
+
+type DataSourceTopic struct {
+	Description *string `json:"description,omitempty"`
+	Iid         string  `json:"iid,omitempty"`
+	Label       string  `json:"label,omitempty"`
+}

@@ -132,6 +132,55 @@ func CreateEquipment(ctx context.Context, client *graphql.Client, equipmentInput
 	return nil
 }
 
+func SetEquipmentBinds(ctx context.Context, client *graphql.Client, equipmentId string, equipmentVersion string, dataSourceId string, propertyNameAliases []*domain.PropertyNameAliasRef) error {
+	var m struct {
+		UpdateEquipmentVersion struct {
+			NumUids int `graphql:"numUids"`
+		} `graphql:"updateEquipmentVersion(input: $input)"`
+	}
+
+	var response struct {
+		UpdateEquipmentVersion struct {
+			NumUids int `json:"numUids"`
+		} `json:"updateEquipmentVersion"`
+	}
+
+	vars := map[string]interface{}{
+		"input": domain.UpdateEquipmentVersionInput{
+			Filter: &domain.EquipmentVersionFilter{
+				ID: &domain.StringExactFilterStringFullTextFilterStringRegExpFilter{
+					Eq: StringPtr(equipmentId),
+				},
+				Version: &domain.StringExactFilterStringFullTextFilter{
+					Eq: StringPtr(equipmentVersion),
+				},
+			},
+			Set: &domain.EquipmentVersionPatch{
+				DataSources: []*domain.EquipmentDataSourceRef{
+					{
+						DataSource: &domain.DataSourceRef{
+							ID: StringPtr(dataSourceId),
+						},
+					},
+				},
+				PropertyNameAliases: propertyNameAliases,
+			},
+		},
+	}
+
+	jsonResult, err := client.NamedMutateRaw(ctx, "UpdateEquipmentVersion", m, vars)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(jsonResult, &response)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
 func GetEquipment(ctx context.Context, client *graphql.Client, equipment *domain.AddEquipmentInput) *domain.Equipment {
 
 	var response struct {
@@ -158,6 +207,45 @@ func GetEquipment(ctx context.Context, client *graphql.Client, equipment *domain
 	variables := map[string]interface{}{
 		"id": graphql.String(equipment.ID),
 	}
+	jsonResult, err := client.QueryRaw(context.Background(), &q, variables)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(jsonResult, &response)
+	if err != nil {
+		panic(err)
+	}
+
+	return response.GetEquipment
+}
+
+func GetEquipmentAllVersions(ctx context.Context, client *graphql.Client, equipmentId string) *domain.Equipment {
+
+	var response struct {
+		GetEquipment *domain.Equipment `json:"getEquipment"`
+	}
+
+	var q struct {
+		GetEquipment struct {
+			ID            string `graphql:"id"`
+			IID           string `graphql:"iid"`
+			ActiveVersion struct {
+				IID string `graphql:"iid"`
+			} `graphql:"activeVersion"`
+			Versions []struct {
+				IID           string `graphql:"iid"`
+				ID            string `graphql:"id"`
+				Version       string `graphql:"version"`
+				VersionStatus string `graphql:"versionStatus"`
+			} `graphql:"versions(order:{asc:version})"`
+		} `graphql:"getEquipment(id:$id)"`
+	}
+
+	variables := map[string]interface{}{
+		"id": graphql.String(equipmentId),
+	}
+
 	jsonResult, err := client.QueryRaw(context.Background(), &q, variables)
 	if err != nil {
 		panic(err)

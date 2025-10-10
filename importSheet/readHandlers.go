@@ -110,15 +110,21 @@ func ReadXLSX(filePath string, sheet string, datasource string) (*ImportData, er
 	equipmentData := make([]EquipmentImportData, 0)
 
 	if datasource != "" {
-		for i := 14; i <= len(rows[0]); i += 7 {
+		for i := 13; i < len(rows[0]); i += 7 {
 			if rows[0][i] == "" {
 				break
 			}
 			tagBindings := make([]EquipmentTagBindingData, 0)
 			for j := 3; j < len(rows); j++ {
 				row := rows[j]
+				if len(row) <= i+2 || row[i+2] == "" {
+					continue
+				}
+				// Filter out Equipment Class name at start as it goes unused in binding
+				propertyId := row[1][1+len(equipmentClassName):]
+
 				tagBinding := EquipmentTagBindingData{
-					PropertyID: row[1],
+					PropertyID: propertyId,
 					Tag:        row[i+2],
 				}
 				tagBindings = append(tagBindings, tagBinding)

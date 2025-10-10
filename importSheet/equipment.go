@@ -14,7 +14,7 @@ import (
 )
 
 func EquipmentModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
-	setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
+	// setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
 	setupEquipment(ctx, client, equipmentImportData.EquipmentImportData, equipmentImportData.EquipmentClassImportData.EquipmentClassName, equipmentImportData.Datasource)
 }
 
@@ -23,7 +23,7 @@ func setupEquipmentClass(ctx context.Context, client *graphql.Client, equipmentI
 
 	bound := domain.PropertyBindingTypeBound
 	static := domain.PropertyBindingTypeStatic
-	classType := domain.Isa95PropertyTypeClassType
+	classType := domain.Isa95PropertyTypeInstanceType
 
 	equipmentClassName := equipmentImportData.EquipmentClassName
 
@@ -336,22 +336,46 @@ func getNewVersion(ctx context.Context, client *graphql.Client, equipmentClass *
 }
 
 func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImportData []EquipmentImportData, equipmentClass string, datasource string) {
-	for i, equipment := range equipmentImportData {
-		equipmentPayload := types.GetEquipmentPayload(equipment.EquipmentName, "", "EquipmentModule", i)
-		equipmentPayload.Versions[0].EquipmentClasses = []*domain.EquipmentClassRef{
-			{
-				ID: types.StringPtr(equipmentClass),
-			},
+	log.Printf("\tSetting up Equipment bindings")
+
+	// First check that the Datasource exists, we cannot bind without it
+	ds, err := types.GetDataSource(ctx, client, datasource)
+	if err != nil {
+		log.Printf("\t\tCould not get Datasource \"%s\", skipping Equipment setup. Error: %s\n", datasource, err)
+		return
+	}
+	if ds == nil {
+		log.Printf("\t\tDatasource \"%s\" not found, add Datasource and rerun utility.\n", datasource)
+		return
+	}
+
+	for _, equipment := range equipmentImportData {
+		equipmentVersions := types.GetEquipmentAllVersions(ctx, client, equipment.EquipmentName)
+
+		if equipmentVersions == nil {
+			// If it does not exist, log a warning
+			log.Printf("\t\tEquipment with ID \"%s\" does not exist, make this Equipment and run the utility again\n", equipment.EquipmentName)
+			continue
 		}
-		equipmentPayload.Versions[0].DataSources = []*domain.EquipmentDataSourceRef{
-			{
-				DataSource: &domain.DataSourceRef{
-					ID: types.StringPtr(datasource),
-				},
-			},
-		}
+
+		log.Printf("\t\tAdding bindings for Equipment \"%s\"\n", equipment.EquipmentName)
+
 		propertyNameAliases := make([]*domain.PropertyNameAliasRef, 0)
+
 		for _, binding := range equipment.EquipmentTagBindings {
+			// Make sure that the topic exists in the Datasource
+			found := false
+			for _, topic := range ds.ActiveVersion.Topics {
+				if topic.Label == binding.Tag {
+					found = true
+					break
+				}
+			}
+			if !found {
+				log.Printf("\t\t\tCould not find topic \"%s\" inside of Datasource \"%s\", skipping this binding", binding.Tag, datasource)
+				continue
+			}
+
 			propertyNameAliases = append(propertyNameAliases, &domain.PropertyNameAliasRef{
 				DataSource: &domain.DataSourceRef{
 					ID: types.StringPtr(datasource),
@@ -360,12 +384,72 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 				PropertyLabel:        types.StringPtr(binding.PropertyID),
 			})
 		}
-		equipmentPayload.Versions[0].PropertyNameAliases = propertyNameAliases
 
-		err := types.CreateEquipment(ctx, client, equipmentPayload)
-		if err != nil {
-			panic(err)
+		// If latest version is an Active Version, then make a new draft version
+		latestVersion := pickLatestEquipmentVersion(equipmentVersions.Versions, false)
+		if latestVersion.VersionStatus == domain.VersionStateActive {
+			// For now just logging a warning
+			log.Printf("\t\t\tLatest version of Equipment with ID \"%s\" is an Active Version, please create a new Draft Version and rerun the utility\n", equipment.EquipmentName)
+			continue
+		} else {
+			// Assume Draft
+			err := types.SetEquipmentBinds(ctx, client, equipment.EquipmentName, latestVersion.Version, datasource, propertyNameAliases)
+			if err != nil {
+				log.Panicln(err)
+			}
 		}
-
 	}
+}
+
+func pickLatestEquipmentVersion(versions []*domain.EquipmentVersion, draftOnly bool) *domain.EquipmentVersion {
+
+	var thisVersions []*domain.EquipmentVersion
+
+	if draftOnly {
+		for _, version := range versions {
+			if version.VersionStatus == domain.VersionStateDraft {
+				thisVersions = append(thisVersions, version)
+			}
+		}
+		return nil
+	} else {
+		thisVersions = make([]*domain.EquipmentVersion, len(versions))
+		copy(thisVersions, versions)
+	}
+
+	if len(thisVersions) == 0 {
+		return nil
+	}
+
+	if len(thisVersions) == 1 {
+		return thisVersions[0]
+	}
+
+	index := 0
+	latestVersionNum := thisVersions[index].Version
+
+	for i, version := range thisVersions[1:] {
+		versionNum, err := strconv.Atoi(version.Version)
+		if err != nil {
+			// compare strings if not integers
+			if version.Version > latestVersionNum {
+				latestVersionNum = version.Version
+				index = i
+			}
+		}
+		currentNum, err := strconv.Atoi(latestVersionNum)
+		if err != nil {
+			// compare strings if not integers
+			if version.Version > latestVersionNum {
+				latestVersionNum = version.Version
+				index = i
+			}
+		}
+		if versionNum > currentNum {
+			latestVersionNum = version.Version
+			index = i + 1
+		}
+	}
+
+	return thisVersions[index]
 }
