@@ -234,8 +234,11 @@ func GetEquipmentAllVersions(ctx context.Context, client *graphql.Client, equipm
 				IID string `graphql:"iid"`
 			} `graphql:"activeVersion"`
 			Versions []struct {
-				IID           string `graphql:"iid"`
-				ID            string `graphql:"id"`
+				IID                 string `graphql:"iid"`
+				ID                  string `graphql:"id"`
+				PropertyNameAliases []struct {
+					PropertyLabel string `graphql:"propertyLabel"`
+				} `graphql:"propertyNameAliases"`
 				Version       string `graphql:"version"`
 				VersionStatus string `graphql:"versionStatus"`
 			} `graphql:"versions(order:{asc:version})"`

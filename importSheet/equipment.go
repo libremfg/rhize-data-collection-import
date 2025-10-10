@@ -349,31 +349,48 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		return
 	}
 
+equipment_loop:
 	for _, equipment := range equipmentImportData {
-		equipmentVersions := types.GetEquipmentAllVersions(ctx, client, equipment.EquipmentName)
-
-		if equipmentVersions == nil {
-			// If it does not exist, log a warning
-			log.Printf("\t\tEquipment with ID \"%s\" does not exist, make this Equipment and run the utility again\n", equipment.EquipmentName)
-			continue
-		}
-
 		log.Printf("\t\tAdding bindings for Equipment \"%s\"\n", equipment.EquipmentName)
 
-		propertyNameAliases := make([]*domain.PropertyNameAliasRef, 0)
+		equipmentVersions := types.GetEquipmentAllVersions(ctx, client, equipment.EquipmentName)
+		if equipmentVersions == nil {
+			// If it does not exist, log a warning
+			log.Printf("\t\t\tEquipment with ID \"%s\" does not exist, make this Equipment and run the utility again\n", equipment.EquipmentName)
+			continue
+		}
+		latestVersion := pickLatestEquipmentVersion(equipmentVersions.Versions, false)
 
+		propertyNameAliases := make([]*domain.PropertyNameAliasRef, 0)
 		for _, binding := range equipment.EquipmentTagBindings {
 			// Make sure that the topic exists in the Datasource
 			found := false
-			for _, topic := range ds.ActiveVersion.Topics {
-				if topic.Label == binding.Tag {
+			for _, alias := range latestVersion.PropertyNameAliases {
+				if alias.PropertyLabel == binding.PropertyID {
 					found = true
 					break
 				}
 			}
-			if !found {
+			if found {
 				log.Printf("\t\t\tCould not find topic \"%s\" inside of Datasource \"%s\", skipping this binding", binding.Tag, datasource)
 				continue
+			}
+
+			// Check that property is not already binded, but only if not an active version
+			// If binded, recommend removing the binding in the UI
+			if latestVersion.VersionStatus != domain.VersionStateActive {
+				found = false
+				for _, topic := range ds.ActiveVersion.Topics {
+					if topic.Label == binding.Tag {
+						found = true
+						break
+					}
+				}
+				if !found {
+					// To-Do: Grab iid of alias and run a delete on it
+					log.Printf("\t\t\tBinding for Property \"%s\" already exists, remove this binding and retry utility.", binding.PropertyID)
+					continue equipment_loop // By continuing the equipment loop, the setup for this equipment will be skipped, allowing multiple runs without issue
+				}
 			}
 
 			propertyNameAliases = append(propertyNameAliases, &domain.PropertyNameAliasRef{
@@ -386,7 +403,6 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		}
 
 		// If latest version is an Active Version, then make a new draft version
-		latestVersion := pickLatestEquipmentVersion(equipmentVersions.Versions, false)
 		if latestVersion.VersionStatus == domain.VersionStateActive {
 			// For now just logging a warning
 			log.Printf("\t\t\tLatest version of Equipment with ID \"%s\" is an Active Version, please create a new Draft Version and rerun the utility\n", equipment.EquipmentName)
