@@ -416,6 +416,7 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		} else {
 			if len(propertyNameAliases) == 0 {
 				log.Println("\t\t\tNo available topics to bind, skipping binding")
+				continue
 			}
 
 			// Assume Draft
