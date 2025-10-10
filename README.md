@@ -101,6 +101,9 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.3.0 J.W.
+  - Add Equipment binding setups from a given Datasource
+  - Add support for loading auth information from environment or .env
 - v1.2.1 T.H.
   - Change error messages to pin-point where to check the import spreadsheet
 - v1.2.0 T.H.
