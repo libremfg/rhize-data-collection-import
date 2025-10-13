@@ -37,12 +37,37 @@ func setupEquipment(ctx context.Context, client *graphql.Client, equipmentImport
 		log.Printf("\t\tAdding bindings for Equipment \"%s\"\n", equipment.EquipmentName)
 
 		equipmentVersions := types.GetEquipmentAllVersions(ctx, client, equipment.EquipmentName)
+		// Must ensure that equipment exists
 		if equipmentVersions == nil {
 			// If it does not exist, log a warning
 			log.Printf("\t\t\tEquipment with ID \"%s\" does not exist, make this Equipment and run the utility again\n", equipment.EquipmentName)
 			continue
 		}
 		latestVersion := pickLatestEquipmentVersion(equipmentVersions.Versions, false)
+		// And that the equipment class exists on that equipment
+		found := false
+		for _, ec := range latestVersion.EquipmentClasses {
+			if ec.ID == equipmentClass {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Printf("\t\t\tEquipment with ID \"%s\" and Version \"%s\" does not have Equipment Class with ID \"%s\", add this class to the equipment and run the utility again\n", equipment.EquipmentName, latestVersion.Version, equipmentClass)
+			continue
+		}
+		// And that datasource exists on that equipment
+		found = false
+		for _, dataSource := range latestVersion.DataSources {
+			if dataSource.DataSource != nil && dataSource.DataSource.ID == datasource {
+				found = true
+				break
+			}
+		}
+		if !found {
+			log.Printf("\t\t\tEquipment with ID \"%s\" and Version \"%s\" does not have DataSource with ID \"%s\", add this datasource to the equipment and run the utility again\n", equipment.EquipmentName, latestVersion.Version, datasource)
+			continue
+		}
 
 		propertyNameAliases := make([]*domain.PropertyNameAliasRef, 0)
 		for _, binding := range equipment.EquipmentTagBindings {
