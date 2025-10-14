@@ -101,6 +101,8 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.4.2 J.W.
+  - Add checks for Equipment Class and Datasource to Equipment model checks
 - v1.4.1 J.W.
   - Change to require adding Datasources to Equipment manually
   - Fix duplicate Datasources appearing on Equipment after binding

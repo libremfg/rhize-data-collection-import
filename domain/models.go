@@ -221,11 +221,13 @@ type Equipment struct {
 }
 
 type EquipmentVersion struct {
-	ID                  string               `json:"id,omitempty"`
-	Iid                 string               `json:"iid,omitempty"`
-	PropertyNameAliases []*PropertyNameAlias `json:"propertyNameAliases,omitempty"`
-	Version             string               `json:"version,omitempty"`
-	VersionStatus       VersionState         `json:"versionStatus,omitempty"`
+	DataSources         []*EquipmentDataSource `json:"dataSources,omitempty"`
+	EquipmentClasses    []*EquipmentClass      `json:"equipmentClasses,omitempty"`
+	ID                  string                 `json:"id,omitempty"`
+	Iid                 string                 `json:"iid,omitempty"`
+	PropertyNameAliases []*PropertyNameAlias   `json:"propertyNameAliases,omitempty"`
+	Version             string                 `json:"version,omitempty"`
+	VersionStatus       VersionState           `json:"versionStatus,omitempty"`
 }
 
 type EquipmentClassRef struct {
@@ -290,4 +292,8 @@ type DataSourceTopic struct {
 
 type PropertyNameAlias struct {
 	PropertyLabel string `json:"propertyLabel,omitempty"`
+}
+
+type EquipmentDataSource struct {
+	DataSource *DataSource `json:"dataSource,omitempty"`
 }
