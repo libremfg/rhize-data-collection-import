@@ -1,7 +1,6 @@
 package auth
 
 import (
-	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -9,14 +8,19 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 
 	"golang.org/x/oauth2"
 )
 
-func Authenticate(ctx context.Context, authUrl, username, password, realm, clientId, clientSecret string) (*http.Client, error) {
-	body := []byte("grant_type=password&username=" + url.QueryEscape(username) + "&password=" + url.QueryEscape(password) + "&client_id=" + url.QueryEscape(clientId) + "&client_secret=" + url.QueryEscape(clientSecret))
-	req, err := http.NewRequest("POST", fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", authUrl, realm), bytes.NewBuffer(body))
+func Authenticate(ctx context.Context, authUrl, realm, clientId, clientSecret string) (*http.Client, error) {
+	form := url.Values{}
+	form.Add("grant_type", "client_credentials")
+	form.Add("client_id", clientId)
+	form.Add("client_secret", clientSecret)
+
+	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", authUrl, realm), strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	if err != nil {
 		panic(err)
