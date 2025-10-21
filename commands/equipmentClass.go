@@ -1,4 +1,4 @@
-package importSheet
+package commands
 
 import (
 	"context"
@@ -10,22 +10,40 @@ import (
 	"strings"
 
 	"github.com/hasura/go-graphql-client"
+	"github.com/spf13/cobra"
 )
 
-func EquipmentClassModel(ctx context.Context, client *graphql.Client, equipmentImportData ImportData) {
-	setupEquipmentClass(ctx, client, equipmentImportData.EquipmentClassImportData)
+var (
+	EquipmentClassCmd = &cobra.Command{
+		Use:     "equipmentClass",
+		Short:   "Import Equipment Class from file",
+		Aliases: []string{"ec"},
+		Run:     importEquipmentClass,
+	}
+)
+
+func init() {
+	// Setup Flags
 }
 
-func setupEquipmentClass(ctx context.Context, client *graphql.Client, equipmentImportData EquipmentClassImportData) {
+func importEquipmentClass(cmd *cobra.Command, args []string) {
+	ctx := context.Background()
+
+	log.Println("Starting import for Equipment Class")
+	equipmentClass(ctx, Client, ImportData.EquipmentClass)
+	log.Println("Finished import for Equipment Class")
+}
+
+func equipmentClass(ctx context.Context, client *graphql.Client, equipmentClassData types.ImportEquipmentClass) {
 	properties := make([]*domain.EquipmentClassPropertyRef, 0)
 
 	bound := domain.PropertyBindingTypeBound
 	static := domain.PropertyBindingTypeStatic
 	classType := domain.Isa95PropertyTypeInstanceType
 
-	equipmentClassName := equipmentImportData.EquipmentClassName
+	equipmentClassName := equipmentClassData.Label
 
-	for _, property := range equipmentImportData.EquipmentClassProperties {
+	for _, property := range equipmentClassData.Properties {
 		if !property.Use {
 			continue
 		}
@@ -222,7 +240,7 @@ search:
 		uiSortIndex := 1
 		processCell := domain.EquipmentElementLevelProcessCell
 
-		extruder := types.GetEquipmentClassPayload(equipmentClassName, types.StringPtr(equipmentImportData.EquipmentClassDescription), &processCell, uiSortIndex)
+		extruder := types.GetEquipmentClassPayload(equipmentClassName, types.StringPtr(equipmentClassData.Description), &processCell, uiSortIndex)
 
 		var err error
 		_, err = types.CreateEquipmentClass(ctx, client, extruder)
