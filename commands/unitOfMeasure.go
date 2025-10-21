@@ -1,4 +1,4 @@
-package importSheet
+package commands
 
 import (
 	"context"
@@ -8,13 +8,31 @@ import (
 	"rhize-data-collection-import/types"
 
 	"github.com/hasura/go-graphql-client"
+	"github.com/spf13/cobra"
 )
 
-func UnitOfMeasure(ctx context.Context, client *graphql.Client, equipmentClassImportData EquipmentClassImportData) {
+var (
+	UnitOfMeasureCmd = &cobra.Command{
+		Use:     "unitOfMeasure",
+		Short:   "Import UoMs from file",
+		Aliases: []string{"uom", "units"},
+		Run:     importUnitOfMeasure,
+	}
+)
+
+func importUnitOfMeasure(cmd *cobra.Command, args []string) {
+	ctx := context.Background()
+
+	log.Println("Starting import for Units of Measure")
+	unitOfMeasure(ctx, Client, ImportData.EquipmentClass.Properties)
+	log.Println("Finished import for Units of Measure")
+}
+
+func unitOfMeasure(ctx context.Context, client *graphql.Client, properties []types.ImportEquipmentClassProperty) {
 	units := make([]domain.AddUnitOfMeasureInput, 0)
 
 out:
-	for _, property := range equipmentClassImportData.EquipmentClassProperties {
+	for _, property := range properties {
 		uom := property.UnitOfMeasure.ID
 		if uom == "" {
 			continue out
