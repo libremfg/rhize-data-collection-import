@@ -101,6 +101,10 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.5.0 J.W.
+  - Change to use sub-commands for specifying target instead of `target` flag
+  - Change to authenticate with a client rather than client and user
+  - Remove `target` flag
 - v1.4.2 J.W.
   - Add checks for Equipment Class and Datasource to Equipment model checks
 - v1.4.1 J.W.
