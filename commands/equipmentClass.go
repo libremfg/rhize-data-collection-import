@@ -39,7 +39,7 @@ func equipmentClass(ctx context.Context, client *graphql.Client, equipmentClassD
 
 	bound := domain.PropertyBindingTypeBound
 	static := domain.PropertyBindingTypeStatic
-	classType := domain.Isa95PropertyTypeInstanceType
+	propertyType := domain.Isa95PropertyTypeDefaultType
 
 	equipmentClassName := equipmentClassData.Label
 
@@ -86,7 +86,7 @@ func equipmentClass(ctx context.Context, client *graphql.Client, equipmentClassD
 			ID:           types.StringPtr(propertyId),
 			Label:        types.StringPtr(propertyName),
 			BindingType:  bindingType,
-			PropertyType: &classType,
+			PropertyType: &propertyType,
 		}
 		if uom != "" {
 			property.ValueUnitOfMeasure = &domain.UnitOfMeasureRef{
