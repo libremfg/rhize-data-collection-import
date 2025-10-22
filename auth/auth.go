@@ -14,11 +14,20 @@ import (
 	"golang.org/x/oauth2"
 )
 
-func Authenticate(ctx context.Context, authUrl, realm, clientId, clientSecret string) (*http.Client, error) {
+func Authenticate(ctx context.Context, authUrl, user, pass, realm, clientId, clientSecret string) (*http.Client, error) {
+	grant_type := "client_credentials"
+	if user != "" && pass != "" {
+		grant_type = "password"
+	}
+
 	form := url.Values{}
-	form.Add("grant_type", "client_credentials")
+	form.Add("grant_type", grant_type)
 	form.Add("client_id", clientId)
 	form.Add("client_secret", clientSecret)
+	if user != "" && pass != "" {
+		form.Add("username", user)
+		form.Add("password", pass)
+	}
 
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/realms/%s/protocol/openid-connect/token", authUrl, realm), strings.NewReader(form.Encode()))
 	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
