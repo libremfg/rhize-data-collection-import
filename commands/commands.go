@@ -28,15 +28,21 @@ var (
 	realm        string
 	clientId     string
 	clientSecret string
+	username     string
+	password     string
 	apiUrl       string
 	Client       *graphql.Client
 
 	// Command
 	RootCmd = &cobra.Command{
-		Use:              "",
-		Short:            "Rhize Data Collection Import",
-		Long:             "Rhize Data Collection Import\n\nSimple utility to import data from a CSV or XLSX.",
-		PersistentPreRun: handlePreRun,
+		Use:   "",
+		Short: "Rhize Data Collection Import",
+		Long:  "Rhize Data Collection Import\n\nSimple utility to import data from a CSV or XLSX.",
+		PersistentPreRun: func(ccmd *cobra.Command, args []string) {
+			setupConfig(ccmd, args)
+			setupClient(ccmd, args)
+			setupImportData(ccmd, args)
+		},
 		Run: func(ccmd *cobra.Command, args []string) {
 			ccmd.HelpFunc()(ccmd, args)
 		},
@@ -57,6 +63,8 @@ func init() {
 	RootCmd.Flags().StringVarP(&realm, "realm", "r", "libre", "Keycloak Realm")
 	RootCmd.Flags().StringVarP(&clientId, "clientId", "c", "libreBaas", "Client ID")
 	RootCmd.Flags().StringVarP(&clientSecret, "clientSecret", "s", "", "Client Secret")
+	RootCmd.Flags().StringVarP(&username, "username", "u", "", "Username for user/pass authentication")
+	RootCmd.Flags().StringVarP(&password, "password", "p", "", "Password for user/pass authentication")
 
 	// API
 	RootCmd.Flags().StringVarP(&apiUrl, "apiUrl", "A", "http://localhost:8080/graphql", "URL for Rhize API")
@@ -73,13 +81,21 @@ func init() {
 	RootCmd.TraverseChildren = true
 }
 
-func handlePreRun(cmd *cobra.Command, args []string) {
+func setupConfig(cmd *cobra.Command, args []string) {
 	// Handle Client Secret, User, and Password
+	log.Println("Loading values from environment for unset flags")
 	if clientSecret == "" {
-		log.Printf("No Client Secret set, loading from .env")
 		clientSecret = os.Getenv("RHIZE_OIDC_CLIENT_SECRET")
 	}
+	if username == "" {
+		username = os.Getenv("RHIZE_OIDC_USERNAME")
+	}
+	if password == "" {
+		password = os.Getenv("RHIZE_OIDC_PASSWORD")
+	}
+}
 
+func setupClient(cmd *cobra.Command, args []string) {
 	// Client Setup
 	ctx := context.Background()
 
@@ -88,18 +104,17 @@ func handlePreRun(cmd *cobra.Command, args []string) {
 	}
 	var err error
 	if !bypass {
-		client, err = auth.Authenticate(ctx, authUrl, realm, clientId, clientSecret)
+		client, err = auth.Authenticate(ctx, authUrl, username, password, realm, clientId, clientSecret)
 	}
 	if err != nil {
 		log.Fatalf("Authentication failed: %v", err)
 	}
 
 	Client = graphql.NewClient(apiUrl, client)
+}
 
-	// Read
-
-	// Determine file type
-	// First check that file is set
+func setupImportData(cmd *cobra.Command, args []string) {
+	// Check that file is set
 	if file == "" {
 		log.Println("Cannot run without \"file\" set, see usage below: \n")
 		return
