@@ -101,6 +101,8 @@ $ ./rhize-importer.exe \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.6.0 J.W.
+  - Change to allow user/pass authentication if both flags are set.
 - v1.5.0 J.W.
   - Change to use sub-commands for specifying target instead of `target` flag
   - Change to authenticate with a client rather than client and user
