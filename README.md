@@ -19,73 +19,87 @@ This tool facilitates the import of equipment data and related information from 
 Flags for the importer can be seen by using the `--help` flag. Default values show examples values.
 ```shell
 $ ./rhize-import.exe --help
-  -apiUrl string
-        URL for Rhize API (default "http://localhost:8080/graphql")
-  -auth
-        Authenticate Client (default true)
-  -authUrl string
-        URL for Keycloak Auth (default "http://localhost:8090")
-  -clientId string
-        Client ID (default "libreBaas")
-  -clientSecret string
-        Client Secret (default "FGY1N5eJQHg3EkOOc5O3IaM4op8o2anT")
-  -description string
-        Equipment Class description used in import for CSV
-  -file string
-        Excel/CSV file to import data from (default "./Copy of OPC_UA-CS_NBXT Extrusion Data Information.xlsx")
-  -password string
-        Authentication Password (default "admin")
-  -realm string
-        Keycloak Realm (default "libre")
-  -sheet string
-        Name of sheet to import data from (default "40084-3_Feeder")
-  -user string
-        Authentication Username (default "admin")
+2025/10/23 11:34:01 rhize-data-collection-import v1.6.1
+Rhize Data Collection Import
+
+Simple utility to import data from a CSV or XLSX.
+
+Usage:
+   [flags]
+   [command]
+
+Available Commands:
+  completion     Generate the autocompletion script for the specified shell
+  equipment      Import equipment
+  equipmentClass Import Equipment Class from file
+  help           Help about any command
+  unitOfMeasure  Import UoMs from file
+
+Flags:
+  -A, --apiUrl string         URL for Rhize API (default "http://localhost:8080/graphql")
+  -a, --authUrl string        URL for Keycloak authentication (default "http://localhost:8090")
+  -b, --bypass                Bypass Keycloak authentication
+  -c, --clientId string       Client ID (default "libreBaas")
+  -s, --clientSecret string   Client Secret
+  -D, --datasource string     The DataSource to bind topics with
+  -f, --file string           Excel/CSV file to import data from
+  -h, --help                  help for this command
+  -p, --password string       Password for user/pass authentication
+  -r, --realm string          Keycloak Realm (default "libre")
+  -S, --sheet string          The Excel Sheet to search for data in
+  -u, --username string       Username for user/pass authentication
+
+Use " [command] --help" for more information about a command.
 ```
 
 #### Example
-Assuming for an Excel (XLSX) file "data.xlsx", a Sheet titled "Oven_A", and an otherwise default Rhize configuration.
+Below is a command for importing Units of Measure from an Excel (XLSX) file "data.xlsx", a Sheet titled "Oven_A", and an otherwise default Rhize configuration. Configuration for authentication is read in from a `.env` file.
 
 ```shell
-$ ./rhize-importer.exe \
-      --file="./data.xlsx" \
-      --sheet="Oven_A" 
-2025/09/30 08:17:06 rhize-data-collection-import v1.0.0
-2025/09/30 08:17:06 Log in Successfully
-2025/09/30 08:17:07 Adding Imported Unit of Measures
-2025/09/30 08:17:07     Adding UoM for °C
-2025/09/30 08:17:07     Adding UoM for rpm
-2025/09/30 08:17:07     Adding UoM for %
-2025/09/30 08:17:07     Adding UoM for Amps
-2025/09/30 08:17:07     Adding UoM for psi
-2025/09/30 08:17:07 Done Imported Unit of Measures
-2025/09/30 08:17:07 Adding Imported Equipment model
-2025/09/30 08:17:07     Adding Equipment Class
-2025/09/30 08:17:07     Adding Equipment Properties
-2025/09/30 08:17:17 Done Imported Equipment model
-2025/09/30 08:17:17 Done Imported model
+$ ./rhize-importer.exe unitOfMeasure \
+  --file="./data.xlsx" \
+  --sheet="Oven_A" 
+2025/10/23 11:56:23 rhize-data-collection-import v1.6.1
+2025/10/23 11:56:23 Loading values from environment for unset flags
+2025/10/23 11:56:23 Log in Successfully
+2025/10/23 11:56:23 Reading data from provided file
+2025/10/23 11:56:23 Starting import for Units of Measure
+2025/10/23 11:56:24     Adding UoM for °C
+2025/10/23 11:56:24     Adding UoM for Amps
+2025/10/23 11:56:24     Adding UoM for psi
+2025/10/23 11:56:24 Finished import for Units of Measure
+```
+
+For import Equipment a DataSource must also be defined. The example assumes a DataSource "OPCUA" is configured in Rhize.
+
+```shell
+$ ./rhize-importer.exe equipment \
+  --file="./data.xlsx" \
+  --sheet="Oven_A" \
+  --datasource="OPCUA"
 ```
 
 ### Command Line Arguments
 
 | Flag | Description | Default |
-|------|-------------|---------|
-| `-apiUrl` | URL for Rhize API | `http://localhost:8080/graphql` |
-| `-auth` | Enable/disable authentication | `true` |
-| `-authUrl` | URL for Keycloak Auth | `http://localhost:8090` |
-| `-clientId` | Client ID for authentication | `libreBaas` |
-| `-clientSecret` | Client secret for authentication | `FGY1N5eJQHg3EkOOc5O3IaM4op8o2anT` |
-| `-description` | Equipment Class description used in import | (required) |
-| `-file` | Path to Excel/CSV file to import | (required) |
-| `-password` | Authentication password | `admin` |
-| `-realm` | Keycloak Realm | `libre` |
-| `-sheet` | Name of sheet to import data from | (optional) |
-| `-user` | Authentication username | `admin` |
+|:------|:-------------|:---------|
+| `--apiUrl` | URL for Rhize API | `http://localhost:8080/graphql` |
+| `--authUrl` | URL for Keycloak Auth | `http://localhost:8090` |
+| `--bypass` | Enable/disable authentication | `false` |
+| `--clientId` | Client ID for authentication | `libreBaas` |
+| `--clientSecret` | Client secret for authentication | (optional) |
+| `--datasource` | The DataSource to bind topics with | (optional, required for Equipment) |
+| `--file` | Path to Excel/CSV file to import | (required) |
+| `--help` | help for this command | (optional) |
+| `--password` | Authentication password | (optional) |
+| `--realm` | Keycloak Realm | `libre` |
+| `--sheet` | Name of sheet to import data from | (optional, required for Excel) |
+| `--username` | Authentication username | (optional) |
 
 ## Prerequisites
 
 - Go 1.24 or higher
-- Access to a Rhzie backend system
+- Access to a Rhize backend system
 - Authentication credentials for the Rhize backend
 
 ## Contributing
