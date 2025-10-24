@@ -3,6 +3,7 @@ package commands
 import (
 	"context"
 	"log"
+	"strings"
 
 	"rhize-data-collection-import/domain"
 	"rhize-data-collection-import/types"
@@ -47,25 +48,29 @@ out:
 
 		var dataType domain.DataType
 
-		switch property.UnitOfMeasure.DataType {
-		case "Double":
+		switch strings.ToLower(property.UnitOfMeasure.DataType) {
+		case "number":
+			fallthrough
+		case "double":
 			dataType = domain.DataTypeFloat
-		case "UInt16":
+		case "uint16":
 			dataType = domain.DataTypeUINt16
-		case "UInt32":
+		case "uint32":
 			dataType = domain.DataTypeUINt32
-		case "Boolean":
+		case "boolean":
 			dataType = domain.DataTypeBool
-		case "Byte":
+		case "byte":
 			dataType = domain.DataTypeByte
-		case "DateTime":
+		case "datetime":
 			dataType = domain.DataTypeDateTime
-		case "String":
+		case "localizedtext":
 			fallthrough
-		case "LocalizedText":
-			fallthrough
-		default:
+		case "string":
 			dataType = domain.DataTypeString
+		default:
+			// Skip any with an unknown data type
+			log.Printf("\tUnknown data type \"%s\", skipping this Unit of Measure\n", property.UnitOfMeasure.DataType)
+			continue out
 		}
 
 		unit := domain.AddUnitOfMeasureInput{
@@ -76,7 +81,7 @@ out:
 
 		existingUoM, err := types.GetUnitOfMeasure(ctx, client, uom)
 		if err != nil {
-			log.Printf("could not query unit of measure: %s", err.Error())
+			log.Printf("\tcould not query unit of measure: %s", err.Error())
 			continue out
 		}
 		if existingUoM != nil {
@@ -87,7 +92,7 @@ out:
 		log.Printf("\tAdding UoM for %s", uom)
 		err = types.CreateUnitOfMeasure(ctx, client, []domain.AddUnitOfMeasureInput{unit})
 		if err != nil {
-			log.Printf("could not add unit of measure: %s", err.Error())
+			log.Printf("\tcould not add unit of measure: %s", err.Error())
 		}
 	}
 
