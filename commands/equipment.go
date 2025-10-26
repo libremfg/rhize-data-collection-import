@@ -55,6 +55,9 @@ func equipment(ctx context.Context, client *graphql.Client, importData types.Imp
 			continue
 		}
 		latestVersion := pickLatestEquipmentVersion(equipmentVersions.Versions, false)
+		if latestVersion == nil {
+			log.Printf("\t\t\tEquipment with ID \"%s\" does not have any versions, check the Equipment and try again\n", equipment.ID)
+		}
 		// And that the equipment class exists on that equipment
 		found := false
 		for _, ec := range latestVersion.EquipmentClasses {
@@ -64,7 +67,7 @@ func equipment(ctx context.Context, client *graphql.Client, importData types.Imp
 			}
 		}
 		if !found {
-			log.Printf("\t\t\tEquipment with ID \"%s\" and Version \"%s\" does not have Equipment Class with ID \"%s\", add this class to the equipment and run the utility again\n", equipment.ID, latestVersion.Version, equipmentClass)
+			log.Printf("\t\t\tEquipment with ID \"%s\" and Version \"%s\" does not have Equipment Class with ID \"%s\", add this class to the equipment and run the utility again\n", equipment.ID, latestVersion.Version, importData.EquipmentClass.Label)
 			continue
 		}
 		// And that datasource exists on that equipment
