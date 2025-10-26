@@ -2,6 +2,7 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"log"
 	"strings"
 
@@ -48,28 +49,9 @@ out:
 
 		var dataType domain.DataType
 
-		switch strings.ToLower(property.UnitOfMeasure.DataType) {
-		case "number":
-			fallthrough
-		case "double":
-			dataType = domain.DataTypeFloat
-		case "uint16":
-			dataType = domain.DataTypeUINt16
-		case "uint32":
-			dataType = domain.DataTypeUINt32
-		case "boolean":
-			dataType = domain.DataTypeBool
-		case "byte":
-			dataType = domain.DataTypeByte
-		case "datetime":
-			dataType = domain.DataTypeDateTime
-		case "localizedtext":
-			fallthrough
-		case "string":
-			dataType = domain.DataTypeString
-		default:
-			// Skip any with an unknown data type
-			log.Printf("\tUnknown data type \"%s\", skipping this Unit of Measure\n", property.UnitOfMeasure.DataType)
+		dataType, err := convertDataType(property.UnitOfMeasure.DataType)
+		if err != nil {
+			log.Printf("\tUnknown data type \"%s\", skipping this Unit of Measure: %s\n", property.UnitOfMeasure.DataType, err.Error())
 			continue out
 		}
 
@@ -96,4 +78,49 @@ out:
 		}
 	}
 
+}
+
+func convertDataType(inputDataType string) (domain.DataType, error) {
+	// Check if DataType exists in Config
+	if dataType, ok := DataTypesMap[strings.ToLower(inputDataType)]; ok {
+		for i := range domain.AllDataType {
+			if strings.ToUpper(dataType) == string(domain.AllDataType[i]) {
+				return domain.AllDataType[i], nil
+			}
+		}
+	}
+
+	// Check if DataType already exists in Rhize
+	for _, dataType := range domain.AllDataType {
+		if strings.ToUpper(inputDataType) == string(dataType) {
+			return dataType, nil
+		}
+	}
+
+	// Try default data types
+	var dataType domain.DataType
+	switch strings.ToLower(inputDataType) {
+	case "number":
+		fallthrough
+	case "double":
+		dataType = domain.DataTypeFloat
+	case "uint16":
+		dataType = domain.DataTypeUINt16
+	case "uint32":
+		dataType = domain.DataTypeUINt32
+	case "boolean":
+		dataType = domain.DataTypeBool
+	case "byte":
+		dataType = domain.DataTypeByte
+	case "datetime":
+		dataType = domain.DataTypeDateTime
+	case "localizedtext":
+		fallthrough
+	case "string":
+		dataType = domain.DataTypeString
+	default:
+		return "", errors.New("data type does not exist in Rhize, config, or default types")
+	}
+
+	return dataType, nil
 }
