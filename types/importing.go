@@ -31,4 +31,5 @@ type ImportEquipment struct {
 type ImportTagBinding struct {
 	PropertyID string
 	Tag        string
+	Expression string
 }

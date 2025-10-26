@@ -82,6 +82,10 @@ func (x XLSXAdapter) Read(filePath string) (*types.ImportData, error) {
 					PropertyID: propertyId,
 					Tag:        row[i+2],
 				}
+				// Optionally add in expressions for tag binding if they exist in comment column
+				if len(row) >= i+3 {
+					tagBinding.Expression = row[i+3]
+				}
 				tagBindings = append(tagBindings, tagBinding)
 			}
 
