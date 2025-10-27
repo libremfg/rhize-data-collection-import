@@ -83,8 +83,8 @@ func (x XLSXAdapter) Read(filePath string) (*types.ImportData, error) {
 					Tag:        row[i+2],
 				}
 				// Optionally add in expressions for tag binding if they exist in comment column
-				if len(row) >= i+3 {
-					tagBinding.Expression = row[i+3]
+				if len(row) > i+4 && row[i+4] != "" {
+					tagBinding.Expression = row[i+4]
 				}
 				tagBindings = append(tagBindings, tagBinding)
 			}
