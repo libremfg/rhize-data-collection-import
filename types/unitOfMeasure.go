@@ -45,7 +45,7 @@ func CreateUnitOfMeasure(ctx context.Context, client *graphql.Client, input []do
 				ID       string `graphql:"id"`
 				DataType string `graphql:"dataType"`
 			} `graphql:"unitOfMeasure"`
-		} `graphql:"addUnitOfMeasure(input: $uom)"`
+		} `graphql:"addUnitOfMeasure(input: $uom, upsert: true)"`
 	}
 
 	reqVar := map[string]interface{}{

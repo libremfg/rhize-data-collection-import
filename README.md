@@ -115,6 +115,8 @@ $ ./rhize-importer.exe equipment \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.8.1 J.W.
+  - Change Units of Measure to upsert instead of failing if same Unit of Measure already exists
 - v1.8.0 J.W.
   - Add support for including expressions with tag bindings, pulling from a dedicated column
 - v1.7.0 J.W.
