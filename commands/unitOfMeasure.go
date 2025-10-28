@@ -2,7 +2,9 @@ package commands
 
 import (
 	"context"
+	"errors"
 	"log"
+	"strings"
 
 	"rhize-data-collection-import/domain"
 	"rhize-data-collection-import/types"
@@ -47,25 +49,10 @@ out:
 
 		var dataType domain.DataType
 
-		switch property.UnitOfMeasure.DataType {
-		case "Double":
-			dataType = domain.DataTypeFloat
-		case "UInt16":
-			dataType = domain.DataTypeUINt16
-		case "UInt32":
-			dataType = domain.DataTypeUINt32
-		case "Boolean":
-			dataType = domain.DataTypeBool
-		case "Byte":
-			dataType = domain.DataTypeByte
-		case "DateTime":
-			dataType = domain.DataTypeDateTime
-		case "String":
-			fallthrough
-		case "LocalizedText":
-			fallthrough
-		default:
-			dataType = domain.DataTypeString
+		dataType, err := convertDataType(property.UnitOfMeasure.DataType)
+		if err != nil {
+			log.Printf("\tUnknown data type \"%s\", skipping this Unit of Measure: %s\n", property.UnitOfMeasure.DataType, err.Error())
+			continue out
 		}
 
 		unit := domain.AddUnitOfMeasureInput{
@@ -76,7 +63,7 @@ out:
 
 		existingUoM, err := types.GetUnitOfMeasure(ctx, client, uom)
 		if err != nil {
-			log.Printf("could not query unit of measure: %s", err.Error())
+			log.Printf("\tcould not query unit of measure: %s", err.Error())
 			continue out
 		}
 		if existingUoM != nil {
@@ -87,8 +74,53 @@ out:
 		log.Printf("\tAdding UoM for %s", uom)
 		err = types.CreateUnitOfMeasure(ctx, client, []domain.AddUnitOfMeasureInput{unit})
 		if err != nil {
-			log.Printf("could not add unit of measure: %s", err.Error())
+			log.Printf("\tcould not add unit of measure: %s", err.Error())
 		}
 	}
 
+}
+
+func convertDataType(inputDataType string) (domain.DataType, error) {
+	// Check if DataType exists in Config
+	if dataType, ok := DataTypesMap[strings.ToLower(inputDataType)]; ok {
+		for i := range domain.AllDataType {
+			if strings.ToUpper(dataType) == string(domain.AllDataType[i]) {
+				return domain.AllDataType[i], nil
+			}
+		}
+	}
+
+	// Check if DataType already exists in Rhize
+	for _, dataType := range domain.AllDataType {
+		if strings.ToUpper(inputDataType) == string(dataType) {
+			return dataType, nil
+		}
+	}
+
+	// Try default data types
+	var dataType domain.DataType
+	switch strings.ToLower(inputDataType) {
+	case "number":
+		fallthrough
+	case "double":
+		dataType = domain.DataTypeFloat
+	case "uint16":
+		dataType = domain.DataTypeUINt16
+	case "uint32":
+		dataType = domain.DataTypeUINt32
+	case "boolean":
+		dataType = domain.DataTypeBool
+	case "byte":
+		dataType = domain.DataTypeByte
+	case "datetime":
+		dataType = domain.DataTypeDateTime
+	case "localizedtext":
+		fallthrough
+	case "string":
+		dataType = domain.DataTypeString
+	default:
+		return "", errors.New("data type does not exist in Rhize, config, or default types")
+	}
+
+	return dataType, nil
 }

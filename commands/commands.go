@@ -19,8 +19,9 @@ import (
 
 var (
 	// Data
-	file       string
-	ImportData types.ImportData
+	file         string
+	ImportData   types.ImportData
+	DataTypesMap map[string]string
 
 	// Auth
 	bypass       bool
@@ -82,6 +83,13 @@ func init() {
 }
 
 func setupConfig(cmd *cobra.Command, args []string) {
+	viper.SetConfigFile("config.yaml")
+	if err := viper.ReadInConfig(); err != nil {
+		panic(err)
+	}
+
+	DataTypesMap = viper.GetStringMapString("dataTypes")
+
 	// Handle Client Secret, User, and Password
 	log.Println("Loading values from environment for unset flags")
 	if clientSecret == "" {

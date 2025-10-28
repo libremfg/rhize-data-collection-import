@@ -1,0 +1,9 @@
+dataTypes:
+  number: "FLOAT"
+  double: "FLOAT"
+  uint16: "UINT16"
+  uint32: "UINT32"
+  byte: "BYTE"
+  datetime: "DATE_TIME"
+  localizedtext: "STRING"
+  string: "STRING"
