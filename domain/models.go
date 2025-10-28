@@ -296,6 +296,7 @@ type DataSourceRef struct {
 type PropertyNameAliasRef struct {
 	DataSource           *DataSourceRef `json:"dataSource,omitempty"`
 	DataSourceTopicLabel *string        `json:"dataSourceTopicLabel,omitempty"`
+	Expression           *string        `json:"expression,omitempty"`
 	PropertyLabel        *string        `json:"propertyLabel,omitempty"`
 }
 

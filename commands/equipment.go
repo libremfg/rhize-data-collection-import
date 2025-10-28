@@ -115,13 +115,18 @@ func equipment(ctx context.Context, client *graphql.Client, importData types.Imp
 				}
 			}
 
-			propertyNameAliases = append(propertyNameAliases, &domain.PropertyNameAliasRef{
+			propertyNameAlias := domain.PropertyNameAliasRef{
 				DataSource: &domain.DataSourceRef{
 					ID: types.StringPtr(importData.Datasource),
 				},
 				DataSourceTopicLabel: types.StringPtr(binding.Tag),
 				PropertyLabel:        types.StringPtr(binding.PropertyID),
-			})
+			}
+			if binding.Expression != "" {
+				propertyNameAlias.Expression = types.StringPtr(binding.Expression)
+			}
+
+			propertyNameAliases = append(propertyNameAliases, &propertyNameAlias)
 		}
 
 		// If latest version is an Active Version, then make a new draft version

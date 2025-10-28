@@ -65,7 +65,7 @@ func (x XLSXAdapter) Read(filePath string) (*types.ImportData, error) {
 	equipmentData := make([]types.ImportEquipment, 0)
 
 	if x.Datasource != "" {
-		for i := 13; i < len(rows[0]); i += 6 {
+		for i := 13; i < len(rows[0]); i += 7 {
 			if rows[0][i] == "" {
 				break
 			}
@@ -81,6 +81,10 @@ func (x XLSXAdapter) Read(filePath string) (*types.ImportData, error) {
 				tagBinding := types.ImportTagBinding{
 					PropertyID: propertyId,
 					Tag:        row[i+2],
+				}
+				// Optionally add in expressions for tag binding if they exist in comment column
+				if len(row) > i+3 && row[i+3] != "" {
+					tagBinding.Expression = row[i+3]
 				}
 				tagBindings = append(tagBindings, tagBinding)
 			}
