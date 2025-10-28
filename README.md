@@ -115,6 +115,9 @@ $ ./rhize-importer.exe equipment \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.8.2 J.W.
+  - Fix panic when no config file exists
+  - Fix repeated checks for skipped Units of Measure
 - v1.8.1 J.W.
   - Change Units of Measure to upsert instead of failing if same Unit of Measure already exists
 - v1.8.0 J.W.
