@@ -66,12 +66,12 @@ out:
 			log.Printf("\tcould not query unit of measure: %s", err.Error())
 			continue out
 		}
+		operation := "Adding"
 		if existingUoM != nil {
-			log.Printf("\tUnit of Measure %s already exists, skipping", uom)
-			continue out
+			operation = "Updating"
 		}
 
-		log.Printf("\tAdding UoM for %s", uom)
+		log.Printf("\t%s UoM for %s", operation, uom)
 		err = types.CreateUnitOfMeasure(ctx, client, []domain.AddUnitOfMeasureInput{unit})
 		if err != nil {
 			log.Printf("\tcould not add unit of measure: %s", err.Error())
