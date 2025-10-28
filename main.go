@@ -9,7 +9,7 @@ import (
 	"github.com/joho/godotenv"
 )
 
-const versionString = "rhize-data-collection-import v1.7.0"
+const versionString = "rhize-data-collection-import v1.8.0"
 
 func main() {
 	log.Println(versionString)

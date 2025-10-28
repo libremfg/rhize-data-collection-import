@@ -115,10 +115,13 @@ $ ./rhize-importer.exe equipment \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.8.0 J.W.
+  - Add support for including expressions with tag bindings, pulling from a dedicated column
 - v1.7.0 J.W.
   - Add support for a configuration file to define how data types should be mapped to Rhize data types
   - Change default data types to include "Number" as a Float
   - Change to not add in Units of Measures with unknown data types
+  - Fix issue where an Equipment without a version would cause a nil pointer exception
 - v1.6.1 J.W.
   - Change Equipment Class import to setup Properties as Default Type instead of Instance Type
 - v1.6.0 J.W.
