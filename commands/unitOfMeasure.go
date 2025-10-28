@@ -31,7 +31,8 @@ func importUnitOfMeasure(cmd *cobra.Command, args []string) {
 }
 
 func unitOfMeasure(ctx context.Context, client *graphql.Client, properties []types.ImportEquipmentClassProperty) {
-	units := make([]domain.AddUnitOfMeasureInput, 0)
+	// Track added UoM ids
+	units := make([]string, 0)
 
 out:
 	for _, property := range properties {
@@ -41,13 +42,13 @@ out:
 		}
 
 		// Check that UoM was not already added
+		// Or had an attempt to be added
 		for _, unit := range units {
-			if unit.ID == uom {
+			if unit == uom {
 				continue out
 			}
 		}
-
-		var dataType domain.DataType
+		units = append(units, uom)
 
 		dataType, err := convertDataType(property.UnitOfMeasure.DataType)
 		if err != nil {
@@ -59,7 +60,6 @@ out:
 			ID:       uom,
 			DataType: &dataType,
 		}
-		units = append(units, unit)
 
 		existingUoM, err := types.GetUnitOfMeasure(ctx, client, uom)
 		if err != nil {

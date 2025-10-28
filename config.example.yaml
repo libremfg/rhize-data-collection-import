@@ -1,9 +1,8 @@
+# Check /domain/models.go for valid Rhize Data Types
+
+# Examples of valid key/values:
 dataTypes:
   number: "FLOAT"
   double: "FLOAT"
-  uint16: "UINT16"
-  uint32: "UINT32"
-  byte: "BYTE"
-  datetime: "DATE_TIME"
-  localizedtext: "STRING"
-  string: "STRING"
+  nodeid[]: "NODE_ID_ARRAY"
+  "int16 / enum": "STRING"
