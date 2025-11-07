@@ -343,9 +343,14 @@ type DataSourceTopic struct {
 }
 
 type PropertyNameAlias struct {
-	PropertyLabel string `json:"propertyLabel,omitempty"`
+	Iid           *string `json:"iid,omitempty"`
+	PropertyLabel string  `json:"propertyLabel,omitempty"`
 }
 
 type EquipmentDataSource struct {
 	DataSource *DataSource `json:"dataSource,omitempty"`
+}
+
+type PropertyNameAliasFilter struct {
+	Iid []string `json:"iid,omitempty"`
 }

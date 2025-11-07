@@ -45,7 +45,7 @@ func equipment(ctx context.Context, client *graphql.Client, importData types.Imp
 	}
 
 	for _, equipment := range importData.Equipment {
-		log.Printf("\t\tAdding bindings for Equipment \"%s\"\n", equipment.ID)
+		log.Printf("\t\tSetting up bindings for Equipment \"%s\"\n", equipment.ID)
 
 		equipmentVersions := types.GetEquipmentAllVersions(ctx, client, equipment.ID)
 		// Must ensure that equipment exists
@@ -83,6 +83,19 @@ func equipment(ctx context.Context, client *graphql.Client, importData types.Imp
 			continue
 		}
 
+		// Clear out any old bindings
+		bindingIids := make([]string, 0)
+		for _, binding := range latestVersion.PropertyNameAliases {
+			bindingIids = append(bindingIids, *binding.Iid)
+		}
+		if len(bindingIids) > 0 {
+			log.Printf("\t\t\tRemoving all bindings for Equipment")
+			err := types.DeleteEquipmentBinds(ctx, client, bindingIids)
+			if err != nil {
+				log.Panicln(err)
+			}
+		}
+
 		propertyNameAliases := make([]*domain.PropertyNameAliasRef, 0)
 		for _, binding := range equipment.TagBindings {
 			// Make sure that the topic exists in the Datasource
@@ -96,23 +109,6 @@ func equipment(ctx context.Context, client *graphql.Client, importData types.Imp
 			if !found {
 				log.Printf("\t\t\tCould not find topic \"%s\" inside of Datasource \"%s\", skipping this binding", binding.Tag, importData.Datasource)
 				continue
-			}
-
-			// Check that property is not already binded, but only if not an active version
-			// If binded, recommend removing the binding in the UI
-			if latestVersion.VersionStatus != domain.VersionStateActive {
-				found = false
-				for _, alias := range latestVersion.PropertyNameAliases {
-					if alias.PropertyLabel == binding.PropertyID {
-						found = true
-						break
-					}
-				}
-				if found {
-					// To-Do: Grab iid of alias and run a delete on it
-					log.Printf("\t\t\tBinding for Property \"%s\" already exists, skipping this binding.", binding.PropertyID)
-					continue
-				}
 			}
 
 			propertyNameAlias := domain.PropertyNameAliasRef{

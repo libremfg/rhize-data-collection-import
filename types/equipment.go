@@ -181,6 +181,38 @@ func SetEquipmentBinds(ctx context.Context, client *graphql.Client, equipmentId 
 	return nil
 }
 
+func DeleteEquipmentBinds(ctx context.Context, client *graphql.Client, iids []string) error {
+	var m struct {
+		DeletePropertyNameAlias struct {
+			NumUids int `graphql:"numUids"`
+		} `graphql:"deletePropertyNameAlias(filter: $filter)"`
+	}
+
+	var response struct {
+		DeletePropertyNameAlias struct {
+			NumUids int `json:"numUids"`
+		} `json:"deletePropertyNameAlias"`
+	}
+
+	vars := map[string]interface{}{
+		"filter": domain.PropertyNameAliasFilter{
+			Iid: iids,
+		},
+	}
+
+	jsonResult, err := client.NamedMutateRaw(ctx, "DeletePropertyNameAlias", m, vars)
+	if err != nil {
+		panic(err)
+	}
+
+	err = json.Unmarshal(jsonResult, &response)
+	if err != nil {
+		panic(err)
+	}
+
+	return nil
+}
+
 func GetEquipment(ctx context.Context, client *graphql.Client, equipment *domain.AddEquipmentInput) *domain.Equipment {
 
 	var response struct {
@@ -253,6 +285,7 @@ func GetEquipmentAllVersions(ctx context.Context, client *graphql.Client, equipm
 					ID string `graphql:"id"`
 				} `graphql:"equipmentClasses"`
 				PropertyNameAliases []struct {
+					IID           string `graphql:"iid"`
 					PropertyLabel string `graphql:"propertyLabel"`
 				} `graphql:"propertyNameAliases"`
 				Version       string `graphql:"version"`

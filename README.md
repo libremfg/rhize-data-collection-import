@@ -115,6 +115,8 @@ $ ./rhize-importer.exe equipment \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.8.3 J.W.
+  - Change to remove all bindings on an Equipment before adding bindings from file
 - v1.8.2 J.W.
   - Fix panic when no config file exists
   - Fix repeated checks for skipped Units of Measure
