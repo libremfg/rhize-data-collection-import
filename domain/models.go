@@ -163,6 +163,7 @@ type EquipmentClassProperty struct {
 
 type EquipmentClassPropertyRef struct {
 	Iid                   *string                    `json:"iid,omitempty"`
+	Description           *string                    `json:"description,omitempty"`
 	BindingType           *PropertyBindingType       `json:"bindingType,omitempty"`
 	EquipmentClassVersion *EquipmentClassVersionRef  `json:"equipmentClassVersion,omitempty"`
 	ID                    *string                    `json:"id,omitempty"`
@@ -174,6 +175,7 @@ type EquipmentClassPropertyRef struct {
 
 type AddEquipmentClassPropertyInput struct {
 	BindingType           *PropertyBindingType       `json:"bindingType,omitempty"`
+	Description           *string                    `json:"description,omitempty"`
 	EquipmentClassVersion *EquipmentClassVersionRef  `json:"equipmentClassVersion,omitempty"`
 	ID                    string                     `json:"id,omitempty"`
 	Label                 string                     `json:"label,omitempty"`

@@ -14,6 +14,7 @@ type ImportEquipmentClass struct {
 
 type ImportEquipmentClassProperty struct {
 	ID            string
+	Description   string
 	UnitOfMeasure ImportUnitOfMeasure
 	Use           bool
 }

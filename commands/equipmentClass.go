@@ -63,9 +63,10 @@ func equipmentClass(ctx context.Context, client *graphql.Client, equipmentClassD
 			continue
 		}
 
-		// Get Property ID/Label
+		// Get Property ID/Label & Description
 		propertyId := fmt.Sprintf("%s.1.%s", equipmentClassName, propertyPath)
 		propertyName := propertiesSplit[len(propertiesSplit)-1]
+		propertyDescription := property.Description
 
 		// Get Parent Property ID
 		parentPropertyId := ""
@@ -84,6 +85,7 @@ func equipmentClass(ctx context.Context, client *graphql.Client, equipmentClassD
 		// Create Property Ref
 		property := domain.EquipmentClassPropertyRef{
 			ID:           types.StringPtr(propertyId),
+			Description:  types.StringPtr(propertyDescription),
 			Label:        types.StringPtr(propertyName),
 			BindingType:  bindingType,
 			PropertyType: &propertyType,
@@ -162,6 +164,7 @@ search:
 				log.Printf("\t\tAdding property \"%s\"\n", *property.ID)
 				err := types.CreateEquipmentClassProperty(ctx, client, &domain.AddEquipmentClassPropertyInput{
 					ID:           *property.ID,
+					Description:  property.Description,
 					Label:        *property.Label,
 					Parent:       property.Parent,
 					BindingType:  property.BindingType,
@@ -256,6 +259,7 @@ search:
 			err := types.CreateEquipmentClassProperty(ctx, client, &domain.AddEquipmentClassPropertyInput{
 				ID:           *property.ID,
 				Label:        *property.Label,
+				Description:  property.Description,
 				Parent:       property.Parent,
 				BindingType:  property.BindingType,
 				PropertyType: *property.PropertyType,

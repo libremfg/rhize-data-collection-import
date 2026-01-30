@@ -51,12 +51,13 @@ func (x XLSXAdapter) Read(filePath string) (*types.ImportData, error) {
 			log.Fatalf("\tERROR: The row %d has insufficient columns, requires 12 has %d. Unable to parse property from spreadsheet. Inspect the spreadsheet for errors and try again.", i, len(row))
 		}
 		equipmentClassPropertyData = append(equipmentClassPropertyData, types.ImportEquipmentClassProperty{
-			ID: row[1],
+			ID:          row[1],
+			Description: row[2],
 			UnitOfMeasure: types.ImportUnitOfMeasure{
-				ID:       row[2],
-				DataType: row[7],
+				ID:       row[3],
+				DataType: row[8],
 			},
-			Use: row[12] == "X",
+			Use: row[13] == "X",
 		})
 	}
 	equipmentClassData.Properties = equipmentClassPropertyData
@@ -65,7 +66,7 @@ func (x XLSXAdapter) Read(filePath string) (*types.ImportData, error) {
 	equipmentData := make([]types.ImportEquipment, 0)
 
 	if x.Datasource != "" {
-		for i := 13; i < len(rows[0]); i += 7 {
+		for i := 14; i < len(rows[0]); i += 7 {
 			if rows[0][i] == "" {
 				break
 			}
