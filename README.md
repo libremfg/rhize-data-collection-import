@@ -4,7 +4,7 @@ A command-line tool for importing data from Excel/CSV files into Rhize systems v
 
 ## Overview
 
-This tool facilitates the import of equipment data and related information from spreadsheet files (Excel/CSV) into Rhize systems. It supports authentication with the Libre backend and can import data based on equipment class descriptions.
+This tool facilitates the import of equipment data and related information from spreadsheet files (Excel/CSV) into Rhize systems. It supports authentication with the Libre backend and can import data based on equipment class descriptions. Assumptions and considerations for the imported sheet and importer behavior can be viewed in the [documentation for drivers](adapters/drivers/README.md).
 
 ## Features
 
@@ -115,6 +115,8 @@ $ ./rhize-importer.exe equipment \
 This project is licensed under the MIT License - see the LICENSE file for details.
 
 ## Change log
+- v1.9.0 J.W.
+  - Add support for Equipment Class Property descriptions.
 - v1.8.3 J.W.
   - Change to remove all bindings on an Equipment before adding bindings from file
 - v1.8.2 J.W.
